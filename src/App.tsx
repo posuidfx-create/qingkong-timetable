@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useState } from "react"
 
 import { AppShell, type PrimaryPage } from "@/components/layout/AppShell"
+import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt"
 import { useAuthSession } from "@/hooks/useAuthSession"
 import { useOnlinePresence } from "@/hooks/useOnlinePresence"
 import { usePrivateUnreadCount } from "@/hooks/usePrivateUnreadCount"
@@ -56,10 +57,8 @@ export default function App() {
       <ProfilePage onOpenChangelog={() => setActivePage("changelog")} onOpenStatistics={() => setActivePage("statistics")} />
     )
 
-  return (
-    <AppShell activePage={activePage} onPageChange={setActivePage} todoBadgeCount={todoBadgeCount} unreadChatCount={unreadChatCount}>
-      {content}
-      <CohortYearSheet open={profile?.cohortYear === null} onOpenChange={() => undefined} required />
-    </AppShell>
-  )
+  return <><AppShell activePage={activePage} onPageChange={setActivePage} todoBadgeCount={todoBadgeCount} unreadChatCount={unreadChatCount}>
+    {content}
+    <CohortYearSheet open={profile?.cohortYear === null} onOpenChange={() => undefined} required />
+  </AppShell><PwaUpdatePrompt /></>
 }
