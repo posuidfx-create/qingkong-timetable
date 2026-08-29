@@ -17,7 +17,7 @@ interface TimetableGridProps {
 function getGridStyle(dayCount: number): CSSProperties {
   return {
     gridTemplateColumns: `2.85rem repeat(${dayCount}, minmax(0, 1fr))`,
-    gridTemplateRows: "3.5rem repeat(11, 4.25rem)",
+    gridTemplateRows: "var(--timetable-grid-rows, 3.5rem repeat(11, 4.25rem))",
   }
 }
 
@@ -35,7 +35,7 @@ export function TimetableGrid({ courses, days, onCourseSelect, sectionTimes }: T
         aria-label="本周课程"
         className="mx-3 overflow-hidden rounded-2xl border bg-card shadow-xs sm:mx-5"
       >
-        <div className="grid" style={getHeaderGridStyle(days.length)}>
+        <div className="timetable-grid grid" style={getHeaderGridStyle(days.length)}>
           <WeekHeader days={days} />
         </div>
         <div className="flex min-h-64 flex-col items-center justify-center px-6 py-12 text-center">
@@ -61,7 +61,7 @@ export function TimetableGrid({ courses, days, onCourseSelect, sectionTimes }: T
       aria-label="本周课程"
       className="mx-2 overflow-hidden rounded-2xl border bg-card shadow-xs sm:mx-4"
     >
-      <div className="grid" style={getGridStyle(days.length)}>
+      <div className="timetable-grid grid" style={getGridStyle(days.length)}>
         <WeekHeader days={days} />
         <SectionColumn sectionTimes={sectionTimes} />
 

@@ -50,3 +50,46 @@ export function getMessageBubbleSide(senderId: string, currentUserId: string): "
 export function sortPrivateConversations(conversations: readonly PrivateConversation[]): PrivateConversation[] {
   return [...conversations].sort((left, right) => new Date(right.lastCreatedAt).getTime() - new Date(left.lastCreatedAt).getTime())
 }
+
+export function shouldSendChatOnEnter({ key, shiftKey, isComposing }: { key: string; shiftKey: boolean; isComposing: boolean }): boolean {
+  return key === "Enter" && !shiftKey && !isComposing
+}
+
+interface DisplayMessage {
+  senderId: string
+  createdAt: string
+}
+
+export interface ChatMessagePresentation<T extends DisplayMessage> {
+  item: T
+  dateDivider: string | null
+  showSender: boolean
+}
+
+function localDateKey(value: string): string {
+  const date = new Date(value)
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+}
+
+export function formatChatDateDivider(value: string, now = new Date()): string {
+  const date = new Date(value)
+  const dayMs = 24 * 60 * 60 * 1000
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  if (target === today) return "今天"
+  if (target === today - dayMs) return "昨天"
+  return `${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+export function getChatMessagePresentation<T extends DisplayMessage>(messages: readonly T[], now = new Date()): ChatMessagePresentation<T>[] {
+  return messages.map((item, index) => {
+    const previous = messages[index - 1]
+    const sameDate = previous && localDateKey(previous.createdAt) === localDateKey(item.createdAt)
+    const closeTogether = previous && new Date(item.createdAt).getTime() - new Date(previous.createdAt).getTime() <= 5 * 60 * 1000
+    return {
+      item,
+      dateDivider: !sameDate ? formatChatDateDivider(item.createdAt, now) : null,
+      showSender: !previous || previous.senderId !== item.senderId || !closeTogether || !sameDate,
+    }
+  })
+}

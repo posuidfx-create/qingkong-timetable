@@ -163,7 +163,6 @@ body {
 .app-shell {
   display: flex;
   width: 100%;
-  max-width: 30rem;
   min-height: 100dvh;
   margin-inline: auto;
   padding-top: env(safe-area-inset-top);
@@ -173,7 +172,16 @@ body {
 }
 
 .app-shell--timetable {
-  max-width: 48rem;
+  max-width: none;
+}
+
+.app-sidebar {
+  width: 13rem;
+  flex: 0 0 13rem;
+  min-height: 100dvh;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 84%, var(--muted));
 }
 
 .app-bottom-nav {
@@ -218,8 +226,18 @@ body {
 
 @media (min-width: 48rem) {
   .app-shell {
-    border-inline: 1px solid var(--border);
-    box-shadow: 0 20px 70px rgb(103 73 60 / 10%);
+    max-width: none;
+    flex-direction: row;
+  }
+
+  .timetable-fab,
+  .todo-fab {
+    right: max(1.75rem, calc((100vw - 78rem) / 2 + 1.25rem));
+    bottom: 1.75rem;
+  }
+
+  .timetable-grid {
+    --timetable-grid-rows: 4rem repeat(11, minmax(4.5rem, 1fr));
   }
 }
 

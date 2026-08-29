@@ -126,7 +126,7 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-7xl">
       <TimetableHeader
         currentWeek={currentWeek}
         currentWeekTarget={currentWeekTarget}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { appendUniqueMessage, countUnreadMessages, getAvailableRooms, getMessageBubbleSide, getRoomLabel, isPrivateParticipant, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
+import { appendUniqueMessage, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomLabel, isPrivateParticipant, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
 import type { Profile } from "@/types/auth"
 
 const base: Profile = { id: "u", username: "晴空", avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00.000Z" }
@@ -37,5 +37,22 @@ describe("chat domain helpers", () => {
     expect(sortPrivateConversations([{ userId: "a", username: "A", role: "user", cohortYear: 2024, lastContent: "old", lastCreatedAt: "2026-01-01T00:00:00Z", unreadCount: 0 }, { userId: "b", username: "B", role: "user", cohortYear: 2025, lastContent: "new", lastCreatedAt: "2026-01-02T00:00:00Z", unreadCount: 1 }]).map((item) => item.userId)).toEqual(["b", "a"])
     expect(getMessageBubbleSide("me", "me")).toBe("right")
     expect(getMessageBubbleSide("other", "me")).toBe("left")
+  })
+  it("groups consecutive messages and inserts local date dividers", () => {
+    const now = new Date("2026-08-30T12:00:00")
+    const presentation = getChatMessagePresentation([
+      { senderId: "a", createdAt: "2026-08-30T09:00:00" },
+      { senderId: "a", createdAt: "2026-08-30T09:03:00" },
+      { senderId: "b", createdAt: "2026-08-30T09:05:00" },
+      { senderId: "b", createdAt: "2026-08-29T09:05:00" },
+    ], now)
+    expect(presentation.map((item) => item.showSender)).toEqual([true, false, true, true])
+    expect(presentation.map((item) => item.dateDivider)).toEqual(["今天", null, null, "昨天"])
+    expect(formatChatDateDivider("2026-08-28T09:05:00", now)).toBe("8月28日")
+  })
+  it("sends on Enter without disrupting IME composition or Shift+Enter", () => {
+    expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: false, isComposing: false })).toBe(true)
+    expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: true, isComposing: false })).toBe(false)
+    expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: false, isComposing: true })).toBe(false)
   })
 })

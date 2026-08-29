@@ -5,5 +5,5 @@ import { changelog } from "@/data/changelog"
 
 describe("changelog", () => {
   it("keeps the current version aligned with the first entry", () => expect(changelog[0].version).toBe(APP_VERSION))
-  it("keeps versions newest first with one current version", () => { expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1); expect(changelog.map((entry) => entry.version)).toEqual(["2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"]) })
+  it("keeps versions newest first with one current version", () => { expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1); expect(changelog.map((entry) => entry.version)).toEqual(["2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"]) })
 })

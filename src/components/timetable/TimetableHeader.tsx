@@ -34,13 +34,13 @@ export function TimetableHeader({
   onCohortChange,
 }: TimetableHeaderProps) {
   return (
-    <section aria-labelledby="timetable-heading" className="px-3 pb-3 pt-4 sm:px-5">
-      <div className="flex items-start justify-between gap-3">
+    <section aria-labelledby="timetable-heading" className="px-3 pb-3 pt-4 sm:px-5 lg:px-6 lg:pb-4">
+      <div className="flex items-start justify-between gap-3 lg:items-center">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
             <div><h2 id="timetable-heading" className="flex items-center gap-1.5 text-base font-semibold tracking-tight"><CalendarDays className="size-4 text-primary" />晴空课表</h2><p className="mt-0.5 truncate text-[11px] text-muted-foreground">国际教育学院 · 中外合作办学 · {semesterName}</p></div>
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:mt-1.5">
             <p className="rounded-full bg-primary/12 px-2.5 py-1 text-sm font-semibold text-primary">第 {currentWeek} 周</p>
             <p className="text-xs text-muted-foreground">{dateRange}</p>
           </div>
@@ -69,7 +69,7 @@ export function TimetableHeader({
         </div>
       </div>
 
-      <div className="mt-3"><p className="mb-1.5 text-xs font-medium text-muted-foreground">查看课表</p><div className="inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="查看课表年级">
+      <div className="mt-3 lg:flex lg:items-center lg:justify-between lg:gap-4"><div><p className="mb-1.5 text-xs font-medium text-muted-foreground">查看课表</p><div className="inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="查看课表年级">
         {([2024, 2025] as const).map((year) => (
           <button
             key={year}
@@ -84,9 +84,9 @@ export function TimetableHeader({
             {String(year).slice(2)}级
           </button>
         ))}
-      </div></div>
+      </div></div><p className="mt-3 hidden text-sm text-muted-foreground lg:block">共 {totalWeeks} 周 · 使用左右按钮切换教学周</p></div>
 
-      <div className="mt-3 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">
+      <div className="mt-3 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 lg:mt-4 lg:max-w-md">
         <button
           type="button"
           aria-label="查看上一周"
