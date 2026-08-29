@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { canAccessAdminTodo, canManageAdminTodos, getVisibleAdminTodoTabs } from "@/lib/adminTodo"
 import type { Profile } from "@/types/auth"
 
-const user24: Profile = { id: "24", username: "24同学", avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00Z" }
+const user24: Profile = { id: "24", username: "24同学", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00Z" }
 const user25: Profile = { ...user24, id: "25", cohortYear: 2025 }
 const admin: Profile = { ...user24, id: "admin", role: "admin" }
 const allTodo = { targetType: "all" as const, targetCohort: null }

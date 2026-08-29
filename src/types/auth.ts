@@ -11,6 +11,7 @@ export interface AuthUser {
 export interface Profile {
   id: string
   username: string
+  title: string | null
   avatarUrl: string | null
   role: AppRole
   cohortYear: ProfileCohortYear | null

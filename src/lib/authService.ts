@@ -1,4 +1,5 @@
 import { getAuthErrorMessage } from "@/lib/auth"
+import { setAuthPersistence } from "@/lib/authPersistence"
 import { supabase } from "@/lib/supabase"
 
 export interface AuthActionResult {
@@ -11,7 +12,8 @@ function requireSupabase() {
   return supabase
 }
 
-export async function signInWithPassword(email: string, password: string): Promise<AuthActionResult> {
+export async function signInWithPassword(email: string, password: string, rememberMe: boolean): Promise<AuthActionResult> {
+  setAuthPersistence(rememberMe)
   const { error } = await requireSupabase().auth.signInWithPassword({ email, password })
   return error ? { error: getAuthErrorMessage(error.message) } : {}
 }

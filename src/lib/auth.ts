@@ -15,6 +15,7 @@ export function parseProfile(value: unknown): Profile | null {
   if (
     typeof row.id !== "string" ||
     typeof row.username !== "string" ||
+    (row.title !== null && typeof row.title !== "string") ||
     !isAppRole(row.role) ||
     typeof row.created_at !== "string" ||
     (row.avatar_url !== null && typeof row.avatar_url !== "string") ||
@@ -26,6 +27,7 @@ export function parseProfile(value: unknown): Profile | null {
   return {
     id: row.id,
     username: row.username,
+    title: row.title,
     avatarUrl: row.avatar_url,
     role: row.role,
     cohortYear: row.cohort_year,
@@ -48,6 +50,15 @@ export function canManageRole(
   return actor?.role === "super_admin" && actor.id !== target.id && target.role !== "super_admin"
 }
 
+export function canEditUserProfile(actor: Profile | null | undefined, target: Profile): boolean {
+  if (!actor || actor.id === target.id || target.role === "super_admin") return false
+  return actor.role === "super_admin" || actor.role === "admin" && target.role === "user"
+}
+
+export function canEditOwnProfile(profile: Profile | null | undefined): boolean {
+  return profile !== null && profile !== undefined
+}
+
 export function canChangeUserRole(actor: Profile | null | undefined, target: Profile, newRole: "user" | "admin"): boolean {
   return actor?.role === "super_admin" && actor.id !== target.id && target.role !== "super_admin" && target.role !== newRole
 }
@@ -62,7 +73,7 @@ export function getAuthErrorMessage(message: string | undefined): string {
   const source = message?.toLowerCase() ?? ""
   if (source.includes("invalid login credentials")) return "邮箱或密码不正确。"
   if (source.includes("already registered") || source.includes("already been registered")) return "该邮箱已经注册，请直接登录。"
-  if (source.includes("email not confirmed")) return "请先到邮箱完成验证后再登录。"
+  if (source.includes("email not confirmed") || source.includes("email confirmation")) return "邮箱尚未验证，请先打开注册邮箱，点击验证邮件中的“Confirm email address”。"
   if (source.includes("network") || source.includes("fetch")) return "网络连接失败，请检查网络后重试。"
   if (source.includes("permission") || source.includes("row-level security")) return "没有执行此操作的权限。"
   return message || "操作未完成，请稍后重试。"
