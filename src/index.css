@@ -1,0 +1,242 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: #fffdf8;
+  --foreground: #4a4543;
+  --card: #fffaf5;
+  --card-foreground: #4a4543;
+  --popover: #fffdf9;
+  --popover-foreground: #4a4543;
+  --primary: #d9879d;
+  --primary-foreground: #fffdfb;
+  --secondary: #fff0c9;
+  --secondary-foreground: #6a5740;
+  --muted: #f8efe8;
+  --muted-foreground: #837671;
+  --accent: #e8f3e6;
+  --accent-foreground: #496452;
+  --destructive: #c96967;
+  --border: #eadcd3;
+  --input: #f7ece5;
+  --ring: #df9aac;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 1rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: #292322;
+  --foreground: #f7eee8;
+  --card: #352d2b;
+  --card-foreground: #fff7f1;
+  --popover: #302827;
+  --popover-foreground: #fff7f1;
+  --primary: #e5a0b2;
+  --primary-foreground: #3c292d;
+  --secondary: #524435;
+  --secondary-foreground: #fff2d2;
+  --muted: #423735;
+  --muted-foreground: #cdbdb5;
+  --accent: #415044;
+  --accent-foreground: #ecf5e9;
+  --destructive: #e2918c;
+  --border: #594b47;
+  --input: #463a37;
+  --ring: #e5a0b2;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    background: var(--background);
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+.app-viewport {
+  min-height: 100dvh;
+  background: var(--muted);
+}
+
+.app-shell {
+  display: flex;
+  width: 100%;
+  max-width: 30rem;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding-top: env(safe-area-inset-top);
+  overflow-x: clip;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.app-shell--timetable {
+  max-width: 48rem;
+}
+
+.app-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px rgb(103 73 60 / 6%);
+}
+
+.timetable-fab {
+  position: fixed;
+  right: max(1rem, calc((100vw - 48rem) / 2 + 1rem));
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.todo-fab {
+  position: fixed;
+  right: max(1rem, calc((100vw - 30rem) / 2 + 1rem));
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.timetable-fab,
+.todo-fab {
+  background: var(--primary);
+  box-shadow: 0 8px 20px rgb(182 104 128 / 24%);
+}
+
+.kawaii-empty-mark {
+  position: relative;
+}
+
+.kawaii-empty-mark::after {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #f5c6d1;
+  content: "";
+}
+
+@media (min-width: 48rem) {
+  .app-shell {
+    border-inline: 1px solid var(--border);
+    box-shadow: 0 20px 70px rgb(103 73 60 / 10%);
+  }
+}
+
+@media (min-width: 40rem) {
+  .responsive-bottom-sheet {
+    right: auto !important;
+    left: 50% !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
