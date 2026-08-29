@@ -26,7 +26,7 @@ export const DEFAULT_APPLICATION_SETTINGS: ApplicationSettings = {
   weekStartsOn: 1,
   showWeekends: false,
   compactCourseCards: false,
-  showDemoCourses: true,
+  showDemoCourses: false,
 }
 
 /**

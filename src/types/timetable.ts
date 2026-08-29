@@ -3,6 +3,7 @@ export type DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7
 export type SectionNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
 
 export type ThemePreference = "light" | "dark" | "system"
+export type CohortYear = 2024 | 2025
 
 export interface Course {
   id: string
@@ -50,6 +51,8 @@ export interface ApplicationSettings {
   weekStartsOn: 1 | 7
   showWeekends: boolean
   compactCourseCards: boolean
+  cohortYear?: CohortYear
+  /** Legacy preference kept only so existing local data can be restored safely. */
   showDemoCourses?: boolean
   defaultSemesterId?: string
 }

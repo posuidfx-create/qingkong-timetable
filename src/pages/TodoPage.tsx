@@ -3,6 +3,7 @@ import { ListTodo, Plus } from "lucide-react"
 
 import { TodoCard } from "@/components/todo/TodoCard"
 import { TodoFormSheet } from "@/components/todo/TodoFormSheet"
+import { getVisibleCourses } from "@/data/builtinTimetables"
 import { sortTodos } from "@/lib/todo"
 import { useTimetableStore } from "@/store/timetableStore"
 import type { Todo } from "@/types/timetable"
@@ -18,13 +19,15 @@ function getTodoFormKey(mode: "create" | "edit", todoId?: string): string {
 
 export function TodoPage() {
   const todos = useTimetableStore((state) => state.todos)
-  const courses = useTimetableStore((state) => state.courses)
+  const userCourses = useTimetableStore((state) => state.courses)
+  const cohortYear = useTimetableStore((state) => state.settings.cohortYear)
   const addTodo = useTimetableStore((state) => state.addTodo)
   const updateTodo = useTimetableStore((state) => state.updateTodo)
   const deleteTodo = useTimetableStore((state) => state.deleteTodo)
   const toggleTodo = useTimetableStore((state) => state.toggleTodo)
   const [overlay, setOverlay] = useState<TodoOverlay>()
   const now = useMemo(() => new Date(), [])
+  const courses = useMemo(() => getVisibleCourses(cohortYear, userCourses), [cohortYear, userCourses])
   const sortedTodos = useMemo(() => sortTodos(todos), [todos])
   const remainingCount = todos.filter((todo) => !todo.completed).length
   const courseNames = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses])

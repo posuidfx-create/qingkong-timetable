@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, FileUp, LocateFixed } from "lucide-react"
 
+import type { CohortYear } from "@/data/builtinTimetables"
 import { cn } from "@/lib/utils"
 
 interface TimetableHeaderProps {
@@ -7,12 +8,13 @@ interface TimetableHeaderProps {
   currentWeek: number
   totalWeeks: number
   dateRange: string
-  isDemo: boolean
+  cohortYear?: CohortYear
   onGoToCurrentWeek: () => void
   onNextWeek: () => void
   onPreviousWeek: () => void
   onImportExcel: () => void
   currentWeekTarget: number
+  onCohortChange: (cohortYear: CohortYear) => void
 }
 
 const iconButtonClassName =
@@ -23,12 +25,13 @@ export function TimetableHeader({
   currentWeek,
   totalWeeks,
   dateRange,
-  isDemo,
+  cohortYear,
   onGoToCurrentWeek,
   onNextWeek,
   onPreviousWeek,
   onImportExcel,
   currentWeekTarget,
+  onCohortChange,
 }: TimetableHeaderProps) {
   return (
     <section aria-labelledby="timetable-heading" className="px-3 pb-3 pt-4 sm:px-5">
@@ -41,11 +44,6 @@ export function TimetableHeader({
             >
               {semesterName}
             </h2>
-            {isDemo ? (
-              <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
-                示例
-              </span>
-            ) : null}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="rounded-full bg-primary/12 px-2.5 py-1 text-sm font-semibold text-primary">第 {currentWeek} 周</p>
@@ -56,7 +54,7 @@ export function TimetableHeader({
         <div className="flex shrink-0 items-center gap-1.5">
           <button
             type="button"
-            aria-label="导入 Excel"
+            aria-label="导入自定义课表"
             className={iconButtonClassName}
             onClick={onImportExcel}
           >
@@ -74,6 +72,23 @@ export function TimetableHeader({
             本周
           </button>
         </div>
+      </div>
+
+      <div className="mt-3 inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="选择年级">
+        {([2024, 2025] as const).map((year) => (
+          <button
+            key={year}
+            type="button"
+            aria-pressed={cohortYear === year}
+            className={cn(
+              "min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              cohortYear === year ? "bg-primary/15 text-primary" : "text-muted-foreground active:bg-muted",
+            )}
+            onClick={() => onCohortChange(year)}
+          >
+            {String(year).slice(2)}级
+          </button>
+        ))}
       </div>
 
       <div className="mt-3 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">

@@ -6,7 +6,8 @@ import { CourseFormSheet } from "@/components/timetable/CourseFormSheet"
 import { ImportPreviewSheet } from "@/components/timetable/ImportPreviewSheet"
 import { TimetableGrid } from "@/components/timetable/TimetableGrid"
 import { TimetableHeader } from "@/components/timetable/TimetableHeader"
-import { DEMO_COURSES } from "@/lib/demoCourses"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { getVisibleCourses, isBuiltinCourse, type CohortYear } from "@/data/builtinTimetables"
 import { getConflictsForCourse, getCourseConflicts } from "@/lib/conflict"
 import { getCurrentSemesterWeek } from "@/lib/date"
 import { getCoursesForWeek } from "@/lib/timetable"
@@ -22,7 +23,7 @@ import type { WorkbookImportResult } from "@/types/importTimetable"
 import type { Course } from "@/types/timetable"
 
 type ActiveOverlay =
-  | { type: "detail"; course: Course; isDemo: boolean }
+  | { type: "detail"; course: Course; readOnly: boolean }
   | { type: "form"; mode: "create"; key: string }
   | { type: "form"; mode: "edit"; course: Course; key: string }
 
@@ -59,6 +60,7 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
   const updateSettings = useTimetableStore((state) => state.updateSettings)
   const [activeOverlay, setActiveOverlay] = useState<ActiveOverlay>()
   const [importSession, setImportSession] = useState<ImportSession>()
+  const [cohortPickerOpen, setCohortPickerOpen] = useState(() => settings.cohortYear === undefined)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const today = useMemo(() => new Date(), [])
   const actualSemesterWeek = getCurrentSemesterWeek(semester, today)
@@ -76,9 +78,11 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
     showWeekends,
     isViewingActualWeek ? today : undefined,
   )
-  const isDemo = courses.length === 0 && settings.showDemoCourses !== false
-  const displayCourses = isDemo ? DEMO_COURSES : courses
-  const currentWeekCourses = getCoursesForWeek(displayCourses, currentWeek)
+  const visibleCourses = useMemo(
+    () => getVisibleCourses(settings.cohortYear, courses),
+    [settings.cohortYear, courses],
+  )
+  const currentWeekCourses = getCoursesForWeek(visibleCourses, currentWeek)
   const todayTodoCount = getTodayTodos(todos, today).length
 
   function handleSave(savedCourse: Course) {
@@ -86,15 +90,14 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
       const { id, ...updates } = savedCourse
       updateCourse(id, updates)
     } else {
-      updateSettings({ showDemoCourses: false })
       addCourse(savedCourse)
     }
     setActiveOverlay(undefined)
   }
 
   function handleDelete(course: Course) {
+    if (isBuiltinCourse(course)) return
     deleteCourse(course.id)
-    updateSettings({ showDemoCourses: false })
     setActiveOverlay(undefined)
   }
 
@@ -128,10 +131,14 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
         currentWeek={currentWeek}
         currentWeekTarget={currentWeekTarget}
         dateRange={formatSemesterWeekRange(semester, currentWeek)}
-        isDemo={isDemo}
+        cohortYear={settings.cohortYear}
         semesterName={semester.name}
         totalWeeks={semester.totalWeeks}
         onImportExcel={() => fileInputRef.current?.click()}
+        onCohortChange={(cohortYear) => {
+          updateSettings({ cohortYear })
+          setCohortPickerOpen(false)
+        }}
         onGoToCurrentWeek={() => setCurrentWeek(currentWeekTarget)}
         onNextWeek={() => setCurrentWeek(currentWeek + 1)}
         onPreviousWeek={() => setCurrentWeek(currentWeek - 1)}
@@ -147,10 +154,10 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
         </button>
       ) : null}
       <TimetableGrid
-        courses={currentWeekCourses}
-        days={days}
-        onCourseSelect={(course) =>
-          setActiveOverlay({ type: "detail", course, isDemo })
+          courses={currentWeekCourses}
+          days={days}
+          onCourseSelect={(course) =>
+          setActiveOverlay({ type: "detail", course, readOnly: isBuiltinCourse(course) })
         }
         sectionTimes={sectionTimes}
       />
@@ -178,13 +185,13 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
       {activeOverlay?.type === "detail" ? (
         <CourseDetailSheet
           course={activeOverlay.course}
-          conflicts={getConflictsForCourse(courses, activeOverlay.course.id, currentWeek)}
-          isDemo={activeOverlay.isDemo}
+          conflicts={getConflictsForCourse(visibleCourses, activeOverlay.course.id, currentWeek)}
+          readOnly={activeOverlay.readOnly}
           open
           sectionTimes={sectionTimes}
-          onDelete={handleDelete}
-          onEdit={(course) =>
-            setActiveOverlay({
+              onDelete={handleDelete}
+              onEdit={(course) =>
+            !isBuiltinCourse(course) && setActiveOverlay({
               type: "form",
               mode: "edit",
               course,
@@ -201,7 +208,7 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
         <CourseFormSheet
           key={activeOverlay.key}
           course={activeOverlay.mode === "edit" ? activeOverlay.course : undefined}
-          existingCourses={courses}
+          existingCourses={visibleCourses}
           mode={activeOverlay.mode}
           open
           sectionTimes={sectionTimes}
@@ -228,18 +235,25 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
           onConfirm={(result) => {
             const existingIds = new Set(courses.map((course) => course.id))
             const newlyImported = result.courses.filter((course) => !existingIds.has(course.id))
-            const conflictGroups = getCourseConflicts([...courses, ...newlyImported]).filter(
+            const conflictGroups = getCourseConflicts([...getVisibleCourses(settings.cohortYear, courses), ...newlyImported]).filter(
               (conflict) =>
                 newlyImported.some(
                   (course) => course.id === conflict.courseAId || course.id === conflict.courseBId,
                 ),
             ).length
             const summary = { ...importCourses(result.courses), conflictGroups }
-            if (summary.added > 0) updateSettings({ showDemoCourses: false })
             setImportSession((current) => (current ? { ...current, summary } : current))
           }}
         />
       ) : null}
+      <Sheet open={cohortPickerOpen} onOpenChange={setCohortPickerOpen}>
+        <SheetContent side="bottom" className="responsive-bottom-sheet rounded-t-3xl">
+          <SheetHeader><SheetTitle>选择你的年级</SheetTitle><SheetDescription>选择后会显示对应的内置课表，也可随时在顶部切换。</SheetDescription></SheetHeader>
+          <div className="grid grid-cols-2 gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {([2024, 2025] as const).map((cohortYear: CohortYear) => <button key={cohortYear} type="button" className="min-h-12 rounded-2xl border bg-secondary/55 text-sm font-semibold text-secondary-foreground active:bg-primary/15 active:text-primary" onClick={() => { updateSettings({ cohortYear }); setCohortPickerOpen(false) }}>{String(cohortYear).slice(2)}级</button>)}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

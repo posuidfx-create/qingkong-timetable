@@ -45,7 +45,10 @@ function toLocalDateTime(value: string | undefined): string {
 export function TodoFormSheet({ courses, onOpenChange, onSave, open, todo }: TodoFormSheetProps) {
   const [title, setTitle] = useState(todo?.title ?? "")
   const [type, setType] = useState<TodoType>(todo?.type ?? "assignment")
-  const [courseId, setCourseId] = useState(todo?.courseId ?? "none")
+  const initialCourseId = todo?.courseId && courses.some((course) => course.id === todo.courseId)
+    ? todo.courseId
+    : "none"
+  const [courseId, setCourseId] = useState(initialCourseId)
   const [dueAt, setDueAt] = useState(toLocalDateTime(todo?.dueAt))
   const [note, setNote] = useState(todo?.note ?? "")
   const [error, setError] = useState<string>()

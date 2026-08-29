@@ -37,7 +37,7 @@ import type { Course, DayOfWeek, SectionTime } from "@/types/timetable"
 interface CourseDetailSheetProps {
   course?: Course
   conflicts?: readonly CourseConflictMatch[]
-  isDemo: boolean
+  readOnly?: boolean
   onDelete: (course: Course) => void
   onEdit: (course: Course) => void
   onOpenChange: (open: boolean) => void
@@ -78,7 +78,7 @@ function DetailItem({ icon: Icon, label, value }: DetailItemProps) {
 export function CourseDetailSheet({
   course,
   conflicts = [],
-  isDemo,
+  readOnly = false,
   onDelete,
   onEdit,
   onOpenChange,
@@ -98,13 +98,13 @@ export function CourseDetailSheet({
           <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <BookOpenText aria-hidden="true" className="size-4" />
             课程详情
-            {isDemo ? <span className="rounded-full bg-secondary px-2 py-0.5">示例课程</span> : null}
+            {readOnly ? <span className="rounded-full bg-secondary px-2 py-0.5">内置课表</span> : null}
           </div>
           <SheetTitle className="mt-2 break-words text-xl font-semibold leading-7">
             {course?.name ?? "课程详情"}
           </SheetTitle>
           <SheetDescription>
-            {isDemo ? "示例课程仅用于预览，不会保存到你的课表。" : "查看课程安排，或继续编辑课程。"}
+            {readOnly ? "内置课表仅供查看；导入和手动新增的课程可继续编辑。" : "查看课程安排，或继续编辑课程。"}
           </SheetDescription>
         </SheetHeader>
 
@@ -152,9 +152,9 @@ export function CourseDetailSheet({
               </section>
             ) : null}
 
-            {isDemo ? (
+            {readOnly ? (
               <p className="mt-3 rounded-2xl bg-primary/8 p-3 text-xs leading-5 text-primary">
-                点击课程表右下角的新增按钮，开始建立自己的课程表。
+                这是当前年级的内置课程。你可以点击右下角新增自己的课程。
               </p>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">

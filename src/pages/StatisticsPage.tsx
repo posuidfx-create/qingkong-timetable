@@ -1,15 +1,18 @@
 import { BarChart3, CheckCircle2, Flame, ShieldAlert } from "lucide-react"
 import { useMemo } from "react"
+import { getVisibleCourses } from "@/data/builtinTimetables"
 import { getBusiestWeekday, getConflictStats, getCourseItemCount, getCurrentWeekStats, getTodoStats, getUniqueCourseCount, getWeekdayCourseLoad, getWeeklyCourseStats } from "@/lib/statistics"
 import { useTimetableStore } from "@/store/timetableStore"
 
 const labels = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
 export function StatisticsPage() {
-  const courses = useTimetableStore((state) => state.courses)
+  const userCourses = useTimetableStore((state) => state.courses)
   const todos = useTimetableStore((state) => state.todos)
   const currentWeek = useTimetableStore((state) => state.currentWeek)
   const semester = useTimetableStore((state) => state.semester)
+  const cohortYear = useTimetableStore((state) => state.settings.cohortYear)
+  const courses = useMemo(() => getVisibleCourses(cohortYear, userCourses), [cohortYear, userCourses])
   const now = useMemo(() => new Date(), [])
   const current = useMemo(() => getCurrentWeekStats(courses, currentWeek), [courses, currentWeek])
   const weekly = useMemo(() => getWeeklyCourseStats(courses, semester.totalWeeks), [courses, semester.totalWeeks])

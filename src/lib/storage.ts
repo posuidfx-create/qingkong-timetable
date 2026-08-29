@@ -9,6 +9,7 @@ import {
 import { isValidSectionRange } from "@/lib/timetable"
 import type {
   ApplicationSettings,
+  CohortYear,
   Course,
   DayOfWeek,
   SectionNumber,
@@ -132,6 +133,10 @@ function isThemePreference(value: unknown): value is ThemePreference {
   return value === "light" || value === "dark" || value === "system"
 }
 
+function isCohortYear(value: unknown): value is CohortYear {
+  return value === 2024 || value === 2025
+}
+
 function isIsoDate(value: unknown): value is string {
   return (
     typeof value === "string" &&
@@ -222,6 +227,7 @@ function validateSettings(value: unknown): value is ApplicationSettings {
     typeof value.showWeekends === "boolean" &&
     typeof value.compactCourseCards === "boolean" &&
     (value.showDemoCourses === undefined || typeof value.showDemoCourses === "boolean") &&
+    (value.cohortYear === undefined || isCohortYear(value.cohortYear)) &&
     isOptionalString(value.defaultSemesterId)
   )
 }

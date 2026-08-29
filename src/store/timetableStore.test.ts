@@ -231,6 +231,16 @@ describe("timetableStore", () => {
     })
   })
 
+  it("cohortYear 会持久化且不影响用户课程", () => {
+    const firstStore = createTimetableStore({ storage })
+    firstStore.getState().addCourse(createCourse())
+    firstStore.getState().updateSettings({ cohortYear: 2025 })
+
+    const refreshedStore = createTimetableStore({ storage })
+    expect(refreshedStore.getState().settings.cohortYear).toBe(2025)
+    expect(refreshedStore.getState().courses).toEqual([createCourse()])
+  })
+
   it("长期数据变化后刷新重建 Store 仍可恢复", () => {
     const firstStore = createTimetableStore({ storage })
     firstStore.getState().addCourse(createCourse())
