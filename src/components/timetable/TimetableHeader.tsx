@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileUp, LocateFixed } from "lucide-react"
+import { CalendarDays, ChevronLeft, ChevronRight, FileUp, LocateFixed } from "lucide-react"
 
 import type { CohortYear } from "@/data/builtinTimetables"
 import { cn } from "@/lib/utils"
@@ -38,12 +38,7 @@ export function TimetableHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h2
-              id="timetable-heading"
-              className="truncate text-sm font-semibold tracking-wide text-muted-foreground sm:text-base"
-            >
-              {semesterName}
-            </h2>
+            <div><h2 id="timetable-heading" className="flex items-center gap-1.5 text-base font-semibold tracking-tight"><CalendarDays className="size-4 text-primary" />晴空课表</h2><p className="mt-0.5 truncate text-[11px] text-muted-foreground">国际教育学院 · 中外合作办学 · {semesterName}</p></div>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="rounded-full bg-primary/12 px-2.5 py-1 text-sm font-semibold text-primary">第 {currentWeek} 周</p>
@@ -74,7 +69,7 @@ export function TimetableHeader({
         </div>
       </div>
 
-      <div className="mt-3 inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="选择年级">
+      <div className="mt-3"><p className="mb-1.5 text-xs font-medium text-muted-foreground">查看课表</p><div className="inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="查看课表年级">
         {([2024, 2025] as const).map((year) => (
           <button
             key={year}
@@ -82,14 +77,14 @@ export function TimetableHeader({
             aria-pressed={cohortYear === year}
             className={cn(
               "min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              cohortYear === year ? "bg-primary/15 text-primary" : "text-muted-foreground active:bg-muted",
+              cohortYear === year ? year === 2024 ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200" : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200" : "text-muted-foreground active:bg-muted",
             )}
             onClick={() => onCohortChange(year)}
           >
             {String(year).slice(2)}级
           </button>
         ))}
-      </div>
+      </div></div>
 
       <div className="mt-3 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">
         <button

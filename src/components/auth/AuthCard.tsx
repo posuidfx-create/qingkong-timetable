@@ -1,0 +1,6 @@
+import type { ReactNode } from "react"
+import { BookOpen, GraduationCap } from "lucide-react"
+
+export function AuthCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return <main className="flex min-h-[100dvh] items-center justify-center bg-background p-4"><section className="w-full max-w-sm rounded-[28px] border bg-card p-6 shadow-sm" aria-labelledby="auth-title"><div className="flex items-center gap-3"><div className="flex size-12 items-center justify-center rounded-2xl bg-primary/15 text-primary"><BookOpen className="size-6" /></div><div><p className="text-lg font-semibold tracking-tight">晴空课表</p><p className="text-xs text-muted-foreground">校园学习生活小助手</p></div></div><div className="mt-6 border-l-2 border-primary/35 pl-3"><p className="flex items-center gap-1.5 text-xs font-medium text-foreground"><GraduationCap className="size-3.5 text-primary" />大连东软信息学院</p><p className="mt-1 text-xs leading-5 text-muted-foreground">国际教育学院（中外合作办学）</p></div><h1 id="auth-title" className="mt-6 text-2xl font-semibold tracking-tight">{title}</h1><p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>{children}</section></main>
+}
