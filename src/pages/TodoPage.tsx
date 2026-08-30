@@ -52,7 +52,7 @@ export function TodoPage() {
 
   const visibleAdminTodos = (tab: "mine" | "cohort_2024" | "cohort_2025") => sortAdminTodos(adminTodos.filter((todo) => tab === "mine" ? todo.targetType !== "cohort" : todo.targetType === "cohort" && todo.targetCohort === (tab === "cohort_2024" ? 2024 : 2025)))
   const saveLocal = (todo: Todo) => { if (localOverlay?.mode === "edit") { const { id, ...updates } = todo; updateTodo(id, updates) } else addTodo(todo); setLocalOverlay(undefined) }
-  const saveAdmin = async (draft: AdminTodoDraft) => { const saved = await saveAdminTodo(draft, adminOverlay !== "create" ? adminOverlay?.id : undefined); setAdminTodos((items) => [saved, ...items.filter((item) => item.id !== saved.id)]) }
+  const saveAdmin = async (draft: AdminTodoDraft, onUploadProgress: (current: number, total: number) => void) => { const saved = await saveAdminTodo(draft, adminOverlay !== "create" ? adminOverlay?.id : undefined, onUploadProgress); setAdminTodos((items) => [saved, ...items.filter((item) => item.id !== saved.id)]) }
   const toggleAdmin = async (todo: AdminTodo) => { try { await toggleAdminTodoCompletion(todo.id, !completedIds.has(todo.id)); setCompletedIds((ids) => { const next = new Set(ids); if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id); return next }) } catch (reason) { setError(reason instanceof Error ? reason.message : "无法更新完成状态。") } }
   const removeAdmin = async (todo: AdminTodo) => { try { await deleteAdminTodo(todo.id); setAdminTodos((items) => items.filter((item) => item.id !== todo.id)) } catch (reason) { setError(reason instanceof Error ? reason.message : "无法删除待办。") } }
 

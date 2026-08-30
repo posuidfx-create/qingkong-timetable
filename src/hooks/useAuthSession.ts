@@ -2,12 +2,13 @@ import { useEffect } from "react"
 
 import { toAuthUser } from "@/lib/auth"
 import { fetchProfile } from "@/lib/profiles"
-import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase, synchronizeSupabaseSession } from "@/lib/supabase"
 import { authStore } from "@/store/authStore"
 
 export function useAuthSession(): void {
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
+    const client = supabase
+    if (!isSupabaseConfigured || !client) {
       authStore.getState().setUnavailable()
       return
     }
@@ -30,8 +31,11 @@ export function useAuthSession(): void {
     }
 
     authStore.getState().setLoading()
-    void supabase.auth.getSession().then(({ data }) => applySession(data.session?.user ?? null))
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    void synchronizeSupabaseSession()
+      .then(() => client.auth.getSession())
+      .then(({ data }) => applySession(data.session?.user ?? null))
+      .catch((error: unknown) => { if (active) authStore.getState().setError(error instanceof Error ? error.message : "无法恢复登录状态。") })
+    const { data: subscription } = client.auth.onAuthStateChange((_event, session) => {
       void applySession(session?.user ?? null)
     })
 

@@ -13,4 +13,10 @@ describe("auth persistence", () => {
     local.setItem("token", "a"); session.setItem("token", "b"); storage.removeItem("token")
     expect(local.getItem("token")).toBeNull(); expect(session.getItem("token")).toBeNull()
   })
+  it("returns the complete raw Supabase session value without transforming it", () => {
+    const local = new MemoryStorage(); const session = new MemoryStorage(); const storage = createAuthStorage(local, session)
+    const rawSession = JSON.stringify({ access_token: "access", refresh_token: "refresh", user: { id: "user" } })
+    setAuthPersistence(true); storage.setItem("supabase.auth.token", rawSession)
+    expect(storage.getItem("supabase.auth.token")).toBe(rawSession)
+  })
 })

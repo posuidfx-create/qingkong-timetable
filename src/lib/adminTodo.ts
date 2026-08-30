@@ -1,5 +1,32 @@
 import type { Profile } from "@/types/auth"
-import type { AdminTodo, AdminTodoTargetType } from "@/types/adminTodo"
+import type { AdminTodo, AdminTodoDraft, AdminTodoTargetType } from "@/types/adminTodo"
+
+export function buildAdminTodoCreateRow(draft: AdminTodoDraft, authUserId: string) {
+  if (!authUserId) throw new Error("登录状态已失效，请重新登录。")
+  return {
+    title: draft.title.trim(),
+    description: draft.description?.trim() || null,
+    due_at: draft.dueAt,
+    target_type: draft.targetType,
+    target_cohort: draft.targetType === "cohort" ? draft.targetCohort : null,
+    created_by: authUserId,
+  }
+}
+
+export function buildAdminTodoInsertRow(draft: AdminTodoDraft, authUserId: string, id: string) {
+  if (!id) throw new Error("待办 ID 缺失。")
+  return { ...buildAdminTodoCreateRow(draft, authUserId), id }
+}
+
+export function buildAdminTodoUpdateRow(draft: AdminTodoDraft) {
+  return {
+    title: draft.title.trim(),
+    description: draft.description?.trim() || null,
+    due_at: draft.dueAt,
+    target_type: draft.targetType,
+    target_cohort: draft.targetType === "cohort" ? draft.targetCohort : null,
+  }
+}
 
 export function canManageAdminTodos(profile: Profile | null | undefined): boolean {
   return profile?.role === "admin" || profile?.role === "super_admin"

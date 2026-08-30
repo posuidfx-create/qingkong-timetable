@@ -12,6 +12,19 @@ export interface AdminTodo {
   dueAt: string | null
   createdAt: string
   updatedAt: string
+  attachments?: TodoAttachment[]
+}
+
+export interface TodoAttachment {
+  id: string
+  todoId: string
+  uploaderId: string
+  path: string
+  name: string
+  mime: string
+  size: number
+  kind: "image" | "file"
+  createdAt: string
 }
 
 export interface AdminTodoCompletion {
@@ -28,4 +41,6 @@ export interface AdminTodoDraft {
   targetType: AdminTodoTargetType
   targetCohort: ProfileCohortYear | null
   userIds: string[]
+  attachments: File[]
+  removedAttachmentIds: string[]
 }
