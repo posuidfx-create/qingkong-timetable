@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { appendUniqueMessage, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomLabel, isPrivateParticipant, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
+import { appendUniqueMessage, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomLabel, isPrivateParticipant, parseChatMessage, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
 import type { Profile } from "@/types/auth"
 
 const base: Profile = { id: "u", username: "晴空", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00.000Z" }
@@ -54,5 +54,10 @@ describe("chat domain helpers", () => {
     expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: false, isComposing: false })).toBe(true)
     expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: true, isComposing: false })).toBe(false)
     expect(shouldSendChatOnEnter({ key: "Enter", shiftKey: false, isComposing: true })).toBe(false)
+  })
+  it("keeps old text messages compatible and parses every attachment type", () => {
+    const row = { id: "m", room_type: "public", sender_id: "u", content: "", created_at: "2026-08-30T00:00:00Z", attachment_path: "group/public/u/a.png", attachment_name: "a.png", attachment_mime: "image/png", attachment_size: 100, attachment_duration: null, attachment_width: null, attachment_height: null }
+    expect(parseChatMessage({ ...row, content: "旧消息" })?.messageType).toBe("text")
+    ;(["image", "file", "audio", "video"] as const).forEach((messageType) => expect(parseChatMessage({ ...row, message_type: messageType })?.messageType).toBe(messageType))
   })
 })

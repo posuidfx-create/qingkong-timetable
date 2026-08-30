@@ -3,7 +3,10 @@ import type { RealtimeChannel } from "@supabase/supabase-js"
 import { appendUniqueMessage, parseChatMessage, validateMessageContent } from "@/lib/chat"
 import { getAuthErrorMessage, isAppRole } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
-import type { ChatMessage, ChatRoomType } from "@/types/chat"
+import { buildAttachmentMessageRow, cleanupDeletedChatAttachment, logAttachmentInsertDiagnostics, logAttachmentInsertError, sendAttachmentWithCleanup } from "@/lib/chatMediaService"
+import type { ChatAttachment, ChatMessage, ChatMessageType, ChatRoomType } from "@/types/chat"
+
+const roomMessageSelect = "id, room_type, sender_id, content, message_type, attachment_path, attachment_name, attachment_mime, attachment_size, attachment_duration, attachment_width, attachment_height, created_at, sender:profiles!chat_messages_sender_id_fkey(username, role)"
 
 function requireSupabase() {
   if (!supabase) throw new Error("Supabase 尚未配置，聊天暂不可用。")
@@ -15,7 +18,7 @@ function parseMessages(rows: unknown[]): ChatMessage[] {
 }
 
 export async function fetchRoomMessages(roomType: ChatRoomType): Promise<ChatMessage[]> {
-  const { data, error } = await requireSupabase().from("chat_messages").select("id, room_type, sender_id, content, created_at, sender:profiles!chat_messages_sender_id_fkey(username, role)").eq("room_type", roomType).order("created_at", { ascending: true }).limit(200)
+  const { data, error } = await requireSupabase().from("chat_messages").select(roomMessageSelect).eq("room_type", roomType).order("created_at", { ascending: true }).limit(200)
   if (error) throw new Error(getAuthErrorMessage(error.message))
   return parseMessages(data ?? [])
 }
@@ -26,16 +29,30 @@ export async function sendRoomMessage(roomType: ChatRoomType, value: string): Pr
   const client = requireSupabase()
   const { data: authData } = await client.auth.getUser()
   if (!authData.user) throw new Error("登录状态已失效，请重新登录。")
-  const { data, error } = await client.from("chat_messages").insert({ room_type: roomType, sender_id: authData.user.id, content }).select("id, room_type, sender_id, content, created_at, sender:profiles!chat_messages_sender_id_fkey(username, role)").single()
+  const { data, error } = await client.from("chat_messages").insert({ room_type: roomType, sender_id: authData.user.id, content }).select(roomMessageSelect).single()
   if (error) throw new Error(getAuthErrorMessage(error.message))
   const message = parseChatMessage(data)
   if (!message) throw new Error("消息格式异常。")
   return message
 }
 
+export async function sendRoomAttachment(roomType: ChatRoomType, file: File, metadata?: { duration?: number | null; width?: number | null; height?: number | null }): Promise<ChatMessage> {
+  return sendAttachmentWithCleanup(file, { kind: "group", roomType }, async (attachment: ChatAttachment, messageType: Exclude<ChatMessageType, "text">) => {
+    const client = requireSupabase(); const { data: authData } = await client.auth.getUser(); if (!authData.user) throw new Error("登录状态已失效，请重新登录。")
+    const row = { room_type: roomType, sender_id: authData.user.id, ...buildAttachmentMessageRow(attachment, messageType) }
+    logAttachmentInsertDiagnostics("chat_messages", row)
+    const { data, error } = await client.from("chat_messages").insert(row).select(roomMessageSelect).single()
+    if (error) { logAttachmentInsertError("chat_messages", error); throw new Error(getAuthErrorMessage(error.message)) } const message = parseChatMessage(data); if (!message) throw new Error("消息格式异常。"); return message
+  }, metadata)
+}
+
 export async function deleteRoomMessage(id: string): Promise<void> {
-  const { error } = await requireSupabase().from("chat_messages").delete().eq("id", id)
+  const client = requireSupabase()
+  const { data: existing, error: readError } = await client.from("chat_messages").select("attachment_path").eq("id", id).single()
+  if (readError) throw new Error(getAuthErrorMessage(readError.message))
+  const { error } = await client.from("chat_messages").delete().eq("id", id)
   if (error) throw new Error(getAuthErrorMessage(error.message))
+  await cleanupDeletedChatAttachment(existing && typeof existing.attachment_path === "string" ? existing.attachment_path : null)
 }
 
 export function subscribeToRoomMessages(roomType: ChatRoomType, onMessage: (message: ChatMessage) => void): RealtimeChannel {

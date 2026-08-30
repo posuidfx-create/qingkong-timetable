@@ -1,4 +1,5 @@
 import { isAppRole } from "@/lib/auth"
+import { isChatMessageType } from "@/lib/chatMedia"
 import type { Profile } from "@/types/auth"
 import { CHAT_ROOM_TYPES, type ChatMessage, type ChatRoomType } from "@/types/chat"
 import type { PrivateConversation } from "@/types/chat"
@@ -32,7 +33,21 @@ export function parseChatMessage(value: unknown): ChatMessage | null {
   if (typeof row.id !== "string" || !isChatRoomType(row.room_type) || typeof row.sender_id !== "string" || typeof row.content !== "string" || typeof row.created_at !== "string") return null
   const senderRow = Array.isArray(row.sender) ? row.sender[0] : row.sender
   const sender = senderRow && typeof senderRow === "object" && typeof (senderRow as Record<string, unknown>).username === "string" && isAppRole((senderRow as Record<string, unknown>).role) ? { username: (senderRow as Record<string, unknown>).username as string, role: (senderRow as Record<string, unknown>).role as Profile["role"] } : null
-  return { id: row.id, roomType: row.room_type, senderId: row.sender_id, content: row.content, createdAt: row.created_at, sender }
+  const attachment = parseChatAttachment(row)
+  const messageType = row.message_type === null || row.message_type === undefined ? "text" : isChatMessageType(row.message_type) ? row.message_type : null
+  if (!messageType || (messageType !== "text" && !attachment)) return null
+  return { id: row.id, roomType: row.room_type, senderId: row.sender_id, content: row.content, messageType, attachment, createdAt: row.created_at, sender }
+}
+
+export function parseChatAttachment(row: Record<string, unknown>) {
+  if (row.attachment_path === null || row.attachment_path === undefined) return null
+  if (typeof row.attachment_path !== "string" || typeof row.attachment_name !== "string" || typeof row.attachment_mime !== "string" || typeof row.attachment_size !== "number") return null
+  const optionalNumber = (value: unknown) => value === null || value === undefined ? null : typeof value === "number" ? value : null
+  const duration = optionalNumber(row.attachment_duration)
+  const width = optionalNumber(row.attachment_width)
+  const height = optionalNumber(row.attachment_height)
+  if ((row.attachment_duration !== null && row.attachment_duration !== undefined && duration === null) || (row.attachment_width !== null && row.attachment_width !== undefined && width === null) || (row.attachment_height !== null && row.attachment_height !== undefined && height === null)) return null
+  return { path: row.attachment_path, name: row.attachment_name, mime: row.attachment_mime, size: row.attachment_size, duration, width, height }
 }
 
 export function isPrivateParticipant(message: { senderId: string; receiverId: string }, firstId: string, secondId: string): boolean {
