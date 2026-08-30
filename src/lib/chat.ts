@@ -17,6 +17,14 @@ export function getRoomLabel(room: ChatRoomType): string {
   return { public: "公共聊天室", cohort_2024: "24级聊天室", cohort_2025: "25级聊天室" }[room]
 }
 
+export function getRoomDescription(room: ChatRoomType): string {
+  return room === "public" ? "国际教育学院同学都可以参与" : `${room === "cohort_2024" ? "24" : "25"}级同学专属聊天室`
+}
+
+export function canAccessChatRoom(availableRooms: readonly ChatRoomType[], room: ChatRoomType): boolean {
+  return availableRooms.includes(room)
+}
+
 export function validateMessageContent(value: string): string | null {
   const content = value.trim()
   if (!content) return null

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { appendUniqueMessage, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomLabel, isPrivateParticipant, parseChatMessage, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
+import { appendUniqueMessage, canAccessChatRoom, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomDescription, getRoomLabel, isPrivateParticipant, parseChatMessage, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
 import type { Profile } from "@/types/auth"
 
 const base: Profile = { id: "u", username: "晴空", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00.000Z" }
@@ -19,8 +19,13 @@ describe("chat domain helpers", () => {
     expect(getAvailableRooms({ ...base, role: "admin" })).toEqual(["public", "cohort_2024", "cohort_2025"])
     expect(getAvailableRooms({ ...base, role: "super_admin", cohortYear: null })).toEqual(["public", "cohort_2024", "cohort_2025"])
   })
+  it("keeps unavailable cohort rooms locked while admins can select all three", () => {
+    expect(canAccessChatRoom(getAvailableRooms(base), "cohort_2025")).toBe(false)
+    expect(canAccessChatRoom(getAvailableRooms({ ...base, role: "admin" }), "cohort_2025")).toBe(true)
+  })
   it("labels rooms and validates trimmed message content", () => {
     expect(getRoomLabel("public")).toBe("公共聊天室")
+    expect(getRoomDescription("cohort_2025")).toBe("25级同学专属聊天室")
     expect(validateMessageContent("  你好  ")).toBe("你好")
     expect(validateMessageContent(" \n ")).toBeNull()
     expect(validateMessageContent("a".repeat(2001))).toBeNull()
