@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { CourseFormValues, WeekSelectionMode } from "@/lib/courseForm"
+import { useI18n } from "@/i18n/useI18n"
+import { formatTranslation } from "@/i18n/translate"
 
 interface WeekSelectorProps {
   error?: string
@@ -17,12 +19,7 @@ interface WeekSelectorProps {
   value: CourseFormValues
 }
 
-const weekModes: readonly { value: WeekSelectionMode; label: string }[] = [
-  { value: "continuous", label: "连续周" },
-  { value: "odd", label: "单周" },
-  { value: "even", label: "双周" },
-  { value: "custom", label: "自定义" },
-]
+const weekModes: readonly WeekSelectionMode[] = ["continuous", "odd", "even", "custom"]
 
 interface WeekNumberSelectProps {
   ariaLabel: string
@@ -30,6 +27,7 @@ interface WeekNumberSelectProps {
   minWeek?: number
   onChange: (week: number) => void
   value: number
+  weekLabel: (week: number) => string
 }
 
 function WeekNumberSelect({
@@ -38,6 +36,7 @@ function WeekNumberSelect({
   minWeek = 1,
   onChange,
   value,
+  weekLabel,
 }: WeekNumberSelectProps) {
   const weeks = Array.from(
     { length: Math.max(0, maxWeek - minWeek + 1) },
@@ -58,7 +57,7 @@ function WeekNumberSelect({
       <SelectContent position="popper">
         {weeks.map((week) => (
           <SelectItem key={week} value={String(week)} className="min-h-10">
-            第 {week} 周
+            {weekLabel(week)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -67,37 +66,40 @@ function WeekNumberSelect({
 }
 
 export function WeekSelector({ error, maxWeek, onChange, value }: WeekSelectorProps) {
+  const { t } = useI18n()
+  const modeKeys = { continuous: "timetable.continuous", odd: "timetable.odd", even: "timetable.even", custom: "timetable.custom" } as const
+  const weekLabel = (week: number) => formatTranslation(t("timetable.weekNumber"), { week })
   return (
     <fieldset aria-describedby={error ? "weeks-error" : "weeks-help"}>
-      <legend className="text-sm font-medium">上课周次 *</legend>
+      <legend className="text-sm font-medium">{t("timetable.weekPattern")} *</legend>
       <div className="mt-2 grid grid-cols-4 gap-1 rounded-xl bg-muted p-1">
         {weekModes.map((mode) => (
           <button
-            key={mode.value}
+            key={mode}
             type="button"
-            aria-pressed={value.weekMode === mode.value}
+            aria-pressed={value.weekMode === mode}
             className={cn(
               "min-h-11 rounded-lg px-1 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              value.weekMode === mode.value
+              value.weekMode === mode
                 ? "bg-card text-foreground shadow-xs"
                 : "text-muted-foreground active:bg-card/65",
             )}
-            onClick={() => onChange({ weekMode: mode.value })}
+            onClick={() => onChange({ weekMode: mode })}
           >
-            {mode.label}
+            {t(modeKeys[mode])}
           </button>
         ))}
       </div>
 
       {value.weekMode === "custom" ? (
         <div className="mt-3">
-          <Label htmlFor="course-custom-weeks">具体周次</Label>
+          <Label htmlFor="course-custom-weeks">{t("timetable.specificWeeks")}</Label>
           <Input
             id="course-custom-weeks"
             aria-invalid={Boolean(error)}
             className="mt-2 h-11"
             inputMode="numeric"
-            placeholder="例如：1,3,5,7"
+            placeholder={t("timetable.customWeeksPlaceholder")}
             value={value.customWeeks}
             onChange={(event) => onChange({ customWeeks: event.target.value })}
           />
@@ -105,12 +107,13 @@ export function WeekSelector({ error, maxWeek, onChange, value }: WeekSelectorPr
       ) : (
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
           <div>
-            <Label>开始周</Label>
+            <Label>{t("timetable.startWeek")}</Label>
             <div className="mt-2">
               <WeekNumberSelect
-                ariaLabel="开始周"
+                ariaLabel={t("timetable.startWeek")}
                 maxWeek={maxWeek}
                 value={value.startWeek}
+                weekLabel={weekLabel}
                 onChange={(startWeek) =>
                   onChange({
                     startWeek,
@@ -120,15 +123,16 @@ export function WeekSelector({ error, maxWeek, onChange, value }: WeekSelectorPr
               />
             </div>
           </div>
-          <span className="pb-3 text-muted-foreground">至</span>
+          <span className="pb-3 text-muted-foreground">{t("timetable.to")}</span>
           <div>
-            <Label>结束周</Label>
+            <Label>{t("timetable.endWeek")}</Label>
             <div className="mt-2">
               <WeekNumberSelect
-                ariaLabel="结束周"
+                ariaLabel={t("timetable.endWeek")}
                 maxWeek={maxWeek}
                 minWeek={value.startWeek}
                 value={Math.max(value.startWeek, value.endWeek)}
+                weekLabel={weekLabel}
                 onChange={(endWeek) => onChange({ endWeek })}
               />
             </div>
@@ -142,7 +146,7 @@ export function WeekSelector({ error, maxWeek, onChange, value }: WeekSelectorPr
         </p>
       ) : (
         <p id="weeks-help" className="mt-2 text-xs leading-5 text-muted-foreground">
-          周次范围限制在本学期第 1～{maxWeek} 周
+          {formatTranslation(t("timetable.weekRangeHelp"), { week: maxWeek })}
         </p>
       )}
     </fieldset>

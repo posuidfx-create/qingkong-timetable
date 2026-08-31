@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest"
 import { canAccessAdminTodo, canManageAdminTodos, getVisibleAdminTodoTabs } from "@/lib/adminTodo"
 import type { Profile } from "@/types/auth"
 
-const user24: Profile = { id: "24", username: "24同学", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00Z" }
+const user24: Profile = { id: "24", username: "24同学", title: null, avatarUrl: null, role: "user", identityType: "student", cohortYear: 2024, createdAt: "2026-01-01T00:00:00Z" }
 const user25: Profile = { ...user24, id: "25", cohortYear: 2025 }
 const admin: Profile = { ...user24, id: "admin", role: "admin" }
+const teacher: Profile = { ...user24, id: "teacher", identityType: "teacher", cohortYear: null }
 const allTodo = { targetType: "all" as const, targetCohort: null }
 const cohort24Todo = { targetType: "cohort" as const, targetCohort: 2024 as const }
 const usersTodo = { targetType: "users" as const, targetCohort: null }
@@ -27,5 +28,11 @@ describe("admin todo access", () => {
   })
   it("keeps ordinary users on their own cohort tab", () => {
     expect(getVisibleAdminTodoTabs(user25)).toEqual(["mine", "cohort_2025"])
+  })
+  it("lets teachers see all and specific todos but not cohort todos", () => {
+    expect(canAccessAdminTodo(allTodo, teacher)).toBe(true)
+    expect(canAccessAdminTodo(usersTodo, teacher, [teacher.id])).toBe(true)
+    expect(canAccessAdminTodo(cohort24Todo, teacher)).toBe(false)
+    expect(getVisibleAdminTodoTabs(teacher)).toEqual(["mine"])
   })
 })

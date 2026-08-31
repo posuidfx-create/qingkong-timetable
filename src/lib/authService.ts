@@ -1,6 +1,8 @@
 import { getAuthErrorMessage } from "@/lib/auth"
 import { setAuthPersistence } from "@/lib/authPersistence"
+import { normalizeProfileIdentity } from "@/lib/profileIdentity"
 import { supabase } from "@/lib/supabase"
+import type { ProfileCohortYear, ProfileIdentityType } from "@/types/auth"
 
 export interface AuthActionResult {
   error?: string
@@ -22,11 +24,14 @@ export async function signUpWithPassword(
   email: string,
   password: string,
   username: string,
+  identityType: ProfileIdentityType,
+  cohortYear: ProfileCohortYear | null,
 ): Promise<AuthActionResult> {
+  const identity = normalizeProfileIdentity(identityType, cohortYear)
   const { data, error } = await requireSupabase().auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    options: { data: { username, identity_type: identity.identityType, cohort_year: identity.cohortYear } },
   })
   if (error) return { error: getAuthErrorMessage(error.message) }
   return { needsEmailConfirmation: !data.session }

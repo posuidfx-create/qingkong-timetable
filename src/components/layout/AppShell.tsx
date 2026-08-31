@@ -1,19 +1,22 @@
-import type { ReactNode } from "react"
-import {
-  CalendarDays,
-  ListTodo,
-  MessageCircle,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react"
+import { useEffect, useState, type ReactNode } from "react"
+import { Info } from "lucide-react"
 
+import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { LanguageMenu } from "@/components/layout/LanguageMenu"
 import { CohortBadge } from "@/components/shared/CohortBadge"
 import { UserAvatar } from "@/components/shared/UserAvatar"
-import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { WallpaperLayer } from "@/components/wallpaper/WallpaperLayer"
+import { WallpaperMotionButton, WallpaperPicker, WallpaperPickerButton } from "@/components/wallpaper/WallpaperPicker"
+import { getWallpaperById, type WallpaperDefinition } from "@/data/wallpapers"
+import type { PrimaryPage } from "@/lib/appNavigation"
+import { primaryNavigationItems, type NavigationItem } from "@/lib/primaryNavigation"
 import { cn } from "@/lib/utils"
+import { readWallpaperPreference, saveWallpaperPreference } from "@/lib/wallpaper"
+import { applyWallpaperMotionAttributes, readWallpaperMotionPreference, toggleAndSaveWallpaperMotion } from "@/lib/wallpaperMotion"
 import { useAuthStore } from "@/store/authStore"
+import { useI18n } from "@/i18n/useI18n"
 
-export type PrimaryPage = "timetable" | "chat" | "todo" | "statistics" | "profile" | "changelog"
+export type { PrimaryPage } from "@/lib/appNavigation"
 
 interface AppShellProps {
   activePage: PrimaryPage
@@ -23,68 +26,97 @@ interface AppShellProps {
   todoBadgeCount?: number
 }
 
-interface NavigationItem {
-  id: Extract<PrimaryPage, "timetable" | "chat" | "todo" | "profile">
-  label: string
-  icon: LucideIcon
-}
-
-const navigationItems: readonly NavigationItem[] = [
-  { id: "timetable", label: "课程表", icon: CalendarDays },
-  { id: "chat", label: "聊天", icon: MessageCircle },
-  { id: "todo", label: "待办", icon: ListTodo },
-  { id: "profile", label: "我的", icon: UserRound },
-]
-
 function NavigationBadge({ count }: { count: number }) {
   if (count <= 0) return null
-  return <span className="absolute -top-1.5 -right-2 min-w-4 rounded-full bg-destructive px-1 text-center text-[9px] leading-4 text-destructive-foreground">{count > 99 ? "99+" : count}</span>
+  return <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-destructive px-1 text-center text-[9px] leading-4 text-destructive-foreground">{count > 99 ? "99+" : count}</span>
 }
 
 export function AppShell({ activePage, children, onPageChange, unreadChatCount = 0, todoBadgeCount = 0 }: AppShellProps) {
   const profile = useAuthStore((state) => state.profile)
-  const pageTitle: Record<PrimaryPage, string> = { timetable: "课程表", chat: "聊天", todo: "待办", statistics: "统计", profile: "我的", changelog: "更新日志" }
+  const { locale, t } = useI18n()
+  const [wallpaper, setWallpaper] = useState(() => getWallpaperById(readWallpaperPreference(typeof window === "undefined" ? undefined : window.localStorage)))
+  const [wallpaperPickerOpen, setWallpaperPickerOpen] = useState(false)
+  const [wallpaperMotion, setWallpaperMotion] = useState(() => readWallpaperMotionPreference(typeof window === "undefined" ? undefined : window.localStorage))
+  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  const pageTitle: Record<PrimaryPage, string> = { timetable: t("nav.timetable"), learning: t("nav.learning"), chat: t("nav.chat"), todo: t("nav.todo"), statistics: t("nav.statistics"), profile: t("nav.profile"), changelog: t("nav.changelog"), about: t("nav.about") }
   const getBadgeCount = (id: NavigationItem["id"]) => id === "chat" ? unreadChatCount : id === "todo" ? todoBadgeCount : 0
 
-  return (
-    <div className="app-viewport">
-      <div className={cn("app-shell", activePage === "timetable" && "app-shell--timetable")}>
-        <aside className="app-sidebar hidden md:flex" aria-label="桌面导航">
-          <div className="px-4 pt-6">
-            <p className="text-lg font-semibold tracking-tight">晴空课表</p>
-            <p className="mt-1 text-xs text-muted-foreground">国际教育学院</p>
-          </div>
-          <nav className="mt-8 space-y-1 px-3" aria-label="主要页面">
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activePage === item.id
-              const badgeCount = getBadgeCount(item.id)
-              return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className={cn("flex min-h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60", isActive ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-muted/75 hover:text-foreground")} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-5" strokeWidth={isActive ? 2.25 : 1.8} /><NavigationBadge count={badgeCount} /></span>{item.label}</button>
-            })}
-          </nav>
-          {profile && <div className="mt-auto border-t p-3"><div className="flex items-center gap-2 rounded-2xl bg-muted/45 p-2"><UserAvatar id={profile.id} name={profile.username} className="size-9 rounded-xl text-xs" /><div className="min-w-0"><p className="truncate text-sm font-semibold">{profile.username}</p><CohortBadge year={profile.cohortYear} className="mt-0.5 inline-flex" /></div></div></div>}
-        </aside>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-4 py-2 sm:px-5 md:px-7">
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium tracking-wide text-muted-foreground md:hidden">国际教育学院 · 校园小助手</p>
-              <h1 className="mt-0.5 truncate text-lg font-semibold tracking-tight">{pageTitle[activePage]}</h1>
-            </div>
-            <ThemeToggle />
-          </header>
-          <main id="app-content" className={cn("min-w-0 flex-1", activePage === "timetable" ? "pb-5" : "px-4 py-5 sm:px-5 md:px-7 md:py-7")}>
-            {children}
-          </main>
-          <nav aria-label="主要页面" className="app-bottom-nav sticky bottom-0 z-10 grid grid-cols-4 gap-1 border-t bg-background px-2 pt-2 md:hidden">
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activePage === item.id
-              const badgeCount = getBadgeCount(item.id)
-              return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className={cn("flex min-h-12 min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-[15px] px-1 text-[11px] font-medium transition-all duration-150 active:scale-[0.97]", isActive ? "bg-primary/12 text-primary shadow-xs" : "text-muted-foreground active:bg-muted active:text-foreground")} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-5" strokeWidth={isActive ? 2.25 : 1.8} /><NavigationBadge count={badgeCount} /></span><span className="max-w-full truncate">{item.label}</span></button>
-            })}
-          </nav>
+  useEffect(() => {
+    document.documentElement.dataset.wallpaper = wallpaper.id
+  }, [wallpaper.id])
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const update = () => setReducedMotion(media.matches)
+    update()
+    media.addEventListener("change", update)
+    return () => media.removeEventListener("change", update)
+  }, [])
+
+  useEffect(() => {
+    applyWallpaperMotionAttributes(document.documentElement, wallpaperMotion, reducedMotion)
+    return () => {
+      delete document.documentElement.dataset.wallpaperMotion
+      delete document.documentElement.dataset.reducedMotion
+    }
+  }, [reducedMotion, wallpaperMotion])
+
+  function handleWallpaperChange(nextWallpaper: WallpaperDefinition) {
+    const savedId = saveWallpaperPreference(window.localStorage, nextWallpaper.id)
+    setWallpaper(getWallpaperById(savedId))
+  }
+
+  function handleToggleWallpaperMotion() {
+    if (reducedMotion) return
+    setWallpaperMotion((currentMotion) => toggleAndSaveWallpaperMotion(window.localStorage, currentMotion))
+  }
+
+  return <div className="app-viewport" data-wallpaper={wallpaper.id} data-wallpaper-motion={wallpaperMotion}>
+    <WallpaperLayer motionPreference={wallpaperMotion} wallpaper={wallpaper} />
+    <div className="app-shell" data-locale={locale}>
+      <aside className="workspace-rail" aria-label={t("nav.timetable")}>
+        <button aria-label={t("brand.name")} className="workspace-rail-brand" onClick={() => onPageChange("timetable")} type="button"><span>{t("brand.name").slice(0, 1)}</span></button>
+        <nav className="workspace-rail-nav" aria-label={t("nav.primary")}>
+          {primaryNavigationItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activePage === item.id
+            const badgeCount = getBadgeCount(item.id)
+            return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className="workspace-rail-item" data-active={isActive} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-5" strokeWidth={isActive ? 2 : 1.55} /><NavigationBadge count={badgeCount} /></span><span>{t(item.labelKey)}</span></button>
+          })}
+        </nav>
+        {profile && <button className="workspace-rail-profile" onClick={() => onPageChange("profile")} type="button"><UserAvatar id={profile.id} name={profile.username} className="size-9 rounded-full text-xs" /><span className="sr-only">{profile.username}</span></button>}
+      </aside>
+      <header className="app-page-header sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b px-4 sm:px-5 md:min-h-18 md:px-8">
+        <div className="min-w-0 md:hidden">
+          <p className="app-mobile-brand-meta truncate font-medium text-muted-foreground">{t("brand.name")}</p>
+          <h1 className="app-mobile-page-title truncate font-medium">{pageTitle[activePage]}</h1>
         </div>
-      </div>
+        <div className="workspace-brand hidden min-w-0 md:block">
+          <p className="truncate text-sm font-medium tracking-tight">{t("brand.name")}</p>
+          <p className="mt-0.5 truncate text-[10px] tracking-[0.08em] text-muted-foreground">{t("brand.slogan")}</p>
+        </div>
+        <div className="hidden min-w-0 flex-1 items-center justify-center md:flex"><p className="truncate text-xs font-medium tracking-[0.08em] text-muted-foreground">{pageTitle[activePage]}</p></div>
+        <div className="app-shell-utility ml-auto">
+          {profile ? <div className="workspace-user hidden items-center gap-2 lg:flex"><div className="min-w-0 text-right"><p className="truncate text-xs font-medium">{profile.username}</p><CohortBadge year={profile.cohortYear} className="mt-0.5 inline-flex" /></div><UserAvatar id={profile.id} name={profile.username} className="size-8 rounded-full text-xs" /></div> : null}
+          <WallpaperMotionButton className="hidden md:inline-flex" motionPreference={wallpaperMotion} reducedMotion={reducedMotion} onToggle={handleToggleWallpaperMotion} />
+          <LanguageMenu compact />
+          <button aria-label={t("utility.about")} className="workspace-utility-button" onClick={() => onPageChange("about")} type="button"><Info aria-hidden="true" className="size-[18px]" /></button>
+          <WallpaperPickerButton onClick={() => setWallpaperPickerOpen(true)} />
+          <ThemeToggle />
+        </div>
+      </header>
+      <main id="app-content" className={cn("min-w-0 flex-1", activePage === "timetable" ? "pb-6" : "px-4 py-6 sm:px-5 md:px-8 md:py-8")}>
+        <div className={cn("app-page-container", activePage === "timetable" && "app-page-container--timetable")} key={activePage}>{children}</div>
+      </main>
+      <nav aria-label={t("nav.primary")} className="app-bottom-nav sticky bottom-0 z-30 grid grid-cols-5 gap-1 border-t bg-background px-2 pt-2 md:hidden">
+        {primaryNavigationItems.map((item) => {
+          const Icon = item.icon
+          const isActive = activePage === item.id
+          const badgeCount = getBadgeCount(item.id)
+          return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className={cn("app-mobile-nav-item flex min-h-12 min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium active:scale-[0.98]", isActive ? "text-primary" : "text-muted-foreground active:text-foreground")} data-active={isActive} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-[19px]" strokeWidth={isActive ? 2 : 1.55} /><NavigationBadge count={badgeCount} /></span><span className="max-w-full truncate">{t(item.labelKey)}</span></button>
+        })}
+      </nav>
     </div>
-  )
+    <WallpaperPicker currentId={wallpaper.id} motionPreference={wallpaperMotion} onChange={handleWallpaperChange} onOpenChange={setWallpaperPickerOpen} onToggleMotion={handleToggleWallpaperMotion} open={wallpaperPickerOpen} reducedMotion={reducedMotion} />
+  </div>
 }

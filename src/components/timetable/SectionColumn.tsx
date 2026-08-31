@@ -8,13 +8,13 @@ export function SectionColumn({ sectionTimes }: SectionColumnProps) {
   return sectionTimes.map((sectionTime) => (
     <div
       key={sectionTime.section}
-      className="flex min-w-0 flex-col items-center justify-center border-t bg-muted/55 px-0.5 text-center"
+      className="timetable-section-column flex min-w-0 flex-col items-center justify-center border-t px-0.5 text-center"
       style={{ gridColumn: 1, gridRow: sectionTime.section + 1 }}
     >
-      <span className="rounded-md px-1 text-sm font-semibold tabular-nums text-foreground">
-        {sectionTime.section}
+      <span className="text-base font-medium tabular-nums text-foreground md:text-lg">
+        {String(sectionTime.section).padStart(2, "0")}
       </span>
-      <span className="mt-0.5 text-[8px] leading-[1.2] tabular-nums text-muted-foreground sm:text-[9px]">
+      <span className="mt-1 text-[8px] leading-[1.3] tracking-[0.04em] tabular-nums text-muted-foreground sm:text-[9px]">
         {sectionTime.startTime}
         <br />
         {sectionTime.endTime}

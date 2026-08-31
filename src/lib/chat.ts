@@ -3,6 +3,8 @@ import { isChatMessageType } from "@/lib/chatMedia"
 import type { Profile } from "@/types/auth"
 import { CHAT_ROOM_TYPES, type ChatMessage, type ChatRoomType } from "@/types/chat"
 import type { PrivateConversation } from "@/types/chat"
+import type { AppLocale } from "@/i18n/locale"
+import { translate } from "@/i18n/translate"
 
 export function isChatRoomType(value: unknown): value is ChatRoomType {
   return typeof value === "string" && CHAT_ROOM_TYPES.includes(value as ChatRoomType)
@@ -10,15 +12,16 @@ export function isChatRoomType(value: unknown): value is ChatRoomType {
 
 export function getAvailableRooms(profile: Profile): ChatRoomType[] {
   if (profile.role !== "user") return ["public", "cohort_2024", "cohort_2025"]
+  if (profile.identityType !== "student") return ["public"]
   return profile.cohortYear === 2024 ? ["public", "cohort_2024"] : profile.cohortYear === 2025 ? ["public", "cohort_2025"] : ["public"]
 }
 
-export function getRoomLabel(room: ChatRoomType): string {
-  return { public: "公共聊天室", cohort_2024: "24级聊天室", cohort_2025: "25级聊天室" }[room]
+export function getRoomLabel(room: ChatRoomType, locale: AppLocale = "zh-CN"): string {
+  return translate(locale, { public: "chat.publicRoom", cohort_2024: "chat.cohort24Room", cohort_2025: "chat.cohort25Room" }[room] as "chat.publicRoom" | "chat.cohort24Room" | "chat.cohort25Room")
 }
 
-export function getRoomDescription(room: ChatRoomType): string {
-  return room === "public" ? "国际教育学院同学都可以参与" : `${room === "cohort_2024" ? "24" : "25"}级同学专属聊天室`
+export function getRoomDescription(room: ChatRoomType, locale: AppLocale = "zh-CN"): string {
+  return translate(locale, room === "public" ? "chat.publicDescription" : room === "cohort_2024" ? "chat.cohort24Description" : "chat.cohort25Description")
 }
 
 export function canAccessChatRoom(availableRooms: readonly ChatRoomType[], room: ChatRoomType): boolean {
@@ -94,24 +97,24 @@ function localDateKey(value: string): string {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
 }
 
-export function formatChatDateDivider(value: string, now = new Date()): string {
+export function formatChatDateDivider(value: string, now = new Date(), locale: AppLocale = "zh-CN"): string {
   const date = new Date(value)
   const dayMs = 24 * 60 * 60 * 1000
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-  if (target === today) return "今天"
-  if (target === today - dayMs) return "昨天"
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  if (target === today) return translate(locale, "date.today")
+  if (target === today - dayMs) return translate(locale, "date.yesterday")
+  return new Intl.DateTimeFormat(locale, { month: "long", day: "numeric" }).format(date)
 }
 
-export function getChatMessagePresentation<T extends DisplayMessage>(messages: readonly T[], now = new Date()): ChatMessagePresentation<T>[] {
+export function getChatMessagePresentation<T extends DisplayMessage>(messages: readonly T[], now = new Date(), locale: AppLocale = "zh-CN"): ChatMessagePresentation<T>[] {
   return messages.map((item, index) => {
     const previous = messages[index - 1]
     const sameDate = previous && localDateKey(previous.createdAt) === localDateKey(item.createdAt)
     const closeTogether = previous && new Date(item.createdAt).getTime() - new Date(previous.createdAt).getTime() <= 5 * 60 * 1000
     return {
       item,
-      dateDivider: !sameDate ? formatChatDateDivider(item.createdAt, now) : null,
+      dateDivider: !sameDate ? formatChatDateDivider(item.createdAt, now, locale) : null,
       showSender: !previous || previous.senderId !== item.senderId || !closeTogether || !sameDate,
     }
   })

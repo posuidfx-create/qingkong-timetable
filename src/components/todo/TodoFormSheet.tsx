@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { createUniqueId } from "@/lib/id"
 import type { Course, Todo, TodoType } from "@/types/timetable"
+import { useI18n } from "@/i18n/useI18n"
 
 interface TodoFormSheetProps {
   courses: readonly Course[]
@@ -29,12 +30,7 @@ interface TodoFormSheetProps {
   todo?: Todo
 }
 
-const todoTypes: readonly { value: TodoType; label: string }[] = [
-  { value: "assignment", label: "作业" },
-  { value: "exam", label: "考试" },
-  { value: "course", label: "课程任务" },
-  { value: "other", label: "其他" },
-]
+const todoTypes: readonly TodoType[] = ["assignment", "exam", "course", "other"]
 
 function toLocalDateTime(value: string | undefined): string {
   if (!value) return ""
@@ -43,6 +39,8 @@ function toLocalDateTime(value: string | undefined): string {
 }
 
 export function TodoFormSheet({ courses, onOpenChange, onSave, open, todo }: TodoFormSheetProps) {
+  const { t } = useI18n()
+  const typeKeys = { assignment: "todo.assignment", exam: "todo.exam", course: "todo.courseTask", other: "todo.other" } as const
   const [title, setTitle] = useState(todo?.title ?? "")
   const [type, setType] = useState<TodoType>(todo?.type ?? "assignment")
   const initialCourseId = todo?.courseId && courses.some((course) => course.id === todo.courseId)
@@ -57,12 +55,12 @@ export function TodoFormSheet({ courses, onOpenChange, onSave, open, todo }: Tod
     event.preventDefault()
     const normalizedTitle = title.trim()
     if (!normalizedTitle) {
-      setError("请输入待办标题")
+      setError(t("todo.titleRequired"))
       return
     }
     const dueDate = dueAt ? new Date(dueAt) : undefined
     if (dueDate && !isValid(dueDate)) {
-      setError("请选择有效的截止时间")
+      setError(t("todo.dueInvalid"))
       return
     }
     onSave({
@@ -85,13 +83,13 @@ export function TodoFormSheet({ courses, onOpenChange, onSave, open, todo }: Tod
       >
         <div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/25" />
         <SheetHeader className="pr-14 pb-3">
-          <SheetTitle className="text-xl font-semibold">{todo ? "编辑待办" : "新增待办"}</SheetTitle>
-          <SheetDescription>整理学习任务，所有内容仅保存在当前设备。</SheetDescription>
+          <SheetTitle className="text-xl font-semibold">{t(todo ? "todo.edit" : "todo.add")}</SheetTitle>
+          <SheetDescription>{t("todo.formDescription")}</SheetDescription>
         </SheetHeader>
         <form className="flex min-h-0 flex-1 flex-col overflow-hidden" onSubmit={handleSubmit}>
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-5">
             <div>
-              <Label htmlFor="todo-title">标题 *</Label>
+              <Label htmlFor="todo-title">{t("todo.name")} *</Label>
               <Input
                 id="todo-title"
                 autoFocus
@@ -104,38 +102,38 @@ export function TodoFormSheet({ courses, onOpenChange, onSave, open, todo }: Tod
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>类型 *</Label>
+                <Label>{t("todo.type")} *</Label>
                 <Select value={type} onValueChange={(value) => setType(value as TodoType)}>
-                  <SelectTrigger aria-label="待办类型" className="mt-2 h-11"><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label={t("todo.type")} className="mt-2 h-11"><SelectValue /></SelectTrigger>
                   <SelectContent position="popper">
-                    {todoTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+                    {todoTypes.map((item) => <SelectItem key={item} value={item}>{t(typeKeys[item])}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>关联课程</Label>
+                <Label>{t("todo.relatedCourse")}</Label>
                 <Select value={courseId} onValueChange={setCourseId}>
-                  <SelectTrigger aria-label="关联课程" className="mt-2 h-11"><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label={t("todo.relatedCourse")} className="mt-2 h-11"><SelectValue /></SelectTrigger>
                   <SelectContent position="popper">
-                    <SelectItem value="none">不关联课程</SelectItem>
+                    <SelectItem value="none">{t("todo.noCourse")}</SelectItem>
                     {courses.map((course) => <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label htmlFor="todo-due-at">截止时间</Label>
+              <Label htmlFor="todo-due-at">{t("todo.dueAt")}</Label>
               <Input id="todo-due-at" className="mt-2 h-11" type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
-              <p className="mt-1.5 text-xs text-muted-foreground">留空表示暂不设置截止时间。</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{t("todo.dueOptional")}</p>
             </div>
             <div>
-              <Label htmlFor="todo-note">备注</Label>
+              <Label htmlFor="todo-note">{t("timetable.note")}</Label>
               <Textarea id="todo-note" className="mt-2" maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 border-t bg-popover px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <button type="button" className="min-h-11 rounded-xl border bg-background text-sm font-medium" onClick={() => onOpenChange(false)}>取消</button>
-            <button type="submit" className="min-h-11 rounded-xl bg-primary text-sm font-semibold text-primary-foreground">{todo ? "保存修改" : "保存待办"}</button>
+            <button type="button" className="min-h-11 rounded-xl border bg-background text-sm font-medium" onClick={() => onOpenChange(false)}>{t("common.cancel")}</button>
+            <button type="submit" className="min-h-11 rounded-xl bg-primary text-sm font-semibold text-primary-foreground">{t(todo ? "todo.saveChanges" : "todo.save")}</button>
           </div>
         </form>
       </SheetContent>

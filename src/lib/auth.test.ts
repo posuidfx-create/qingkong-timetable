@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { canChangeUserRole, canEditOwnProfile, canEditUserProfile, canManageRole, getAuthErrorMessage, getAuthScreen, getRoleLabel, parseProfile } from "@/lib/auth"
 import type { Profile } from "@/types/auth"
 
-const user: Profile = { id: "user-1", username: "同学", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-08-29T00:00:00.000Z" }
+const user: Profile = { id: "user-1", username: "同学", title: null, avatarUrl: null, role: "user", identityType: "student", cohortYear: 2024, createdAt: "2026-08-29T00:00:00.000Z" }
 const admin: Profile = { ...user, id: "admin-1", role: "admin" }
 const superAdmin: Profile = { ...user, id: "super-1", role: "super_admin" }
 
@@ -11,6 +11,14 @@ describe("auth helpers", () => {
   it("parses a valid profile and rejects invalid roles", () => {
     expect(parseProfile({ id: "a", username: "晴空", title: null, avatar_url: null, role: "admin", cohort_year: 2025, created_at: "2026-08-29T00:00:00.000Z" })).toMatchObject({ username: "晴空", role: "admin", cohortYear: 2025 })
     expect(parseProfile({ id: "a", username: "晴空", avatar_url: null, role: "owner", created_at: "date" })).toBeNull()
+  })
+
+  it("parses student and teacher identities while keeping legacy profiles compatible", () => {
+    const base = { id: "a", username: "用户", title: null, avatar_url: null, role: "user", created_at: "2026-08-29T00:00:00.000Z" }
+    expect(parseProfile({ ...base, identity_type: "student", cohort_year: 2024 })).toMatchObject({ identityType: "student", cohortYear: 2024 })
+    expect(parseProfile({ ...base, identity_type: "teacher", cohort_year: null })).toMatchObject({ identityType: "teacher", cohortYear: null })
+    expect(parseProfile({ ...base, cohort_year: null })).toMatchObject({ identityType: null, cohortYear: null })
+    expect(parseProfile({ ...base, identity_type: "teacher", cohort_year: 2024 })).toBeNull()
   })
 
   it("only allows a super administrator to manage ordinary users or admins", () => {

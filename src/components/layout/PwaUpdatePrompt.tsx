@@ -3,9 +3,13 @@ import { Download, Sparkles } from "lucide-react"
 import { registerSW } from "virtual:pwa-register"
 
 import { Button } from "@/components/ui/button"
+import { APP_BRAND_NAME } from "@/constants/brand"
+import { APP_VERSION_TAG } from "@/constants/appVersion"
 import { applyPwaUpdate, dismissPwaUpdatePrompt, showPwaUpdatePrompt, type PwaUpdatePromptState } from "@/lib/pwaUpdate"
+import { useI18n } from "@/i18n/useI18n"
 
 export function PwaUpdatePrompt() {
+  const { t } = useI18n()
   const [state, setState] = useState<PwaUpdatePromptState>("hidden")
   const updateServiceWorker = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null)
 
@@ -34,5 +38,5 @@ export function PwaUpdatePrompt() {
   }, [])
 
   if (state === "hidden") return null
-  return <aside aria-live="polite" className="fixed inset-x-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 mx-auto w-auto max-w-sm rounded-[22px] border bg-card p-4 shadow-lg md:bottom-6 md:left-auto md:right-6 md:mx-0"><div className="flex gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Sparkles className="size-5" /></div><div className="min-w-0"><h2 className="text-sm font-semibold">发现新版本</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">晴空课表有新的版本可用，更新后即可使用最新功能。</p></div></div><div className="mt-4 flex items-center justify-end gap-2"><Button onClick={() => setState(dismissPwaUpdatePrompt())} size="sm" variant="ghost">稍后</Button><Button aria-label="立即更新到新版本" onClick={() => { const update = updateServiceWorker.current; if (update) void applyPwaUpdate(update) }} size="sm"><Download />立即更新</Button></div></aside>
+  return <aside aria-live="polite" className="fixed inset-x-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 mx-auto w-auto max-w-sm rounded-[22px] border bg-card p-4 shadow-lg md:bottom-6 md:left-auto md:right-6 md:mx-0"><div className="flex gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Sparkles className="size-5" /></div><div className="min-w-0"><h2 className="text-sm font-semibold">{t("pwa.title")}</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">{APP_BRAND_NAME} · {APP_VERSION_TAG}。{t("pwa.description")}</p></div></div><div className="mt-4 flex items-center justify-end gap-2"><Button onClick={() => setState(dismissPwaUpdatePrompt())} size="sm" variant="ghost">{t("pwa.later")}</Button><Button aria-label={t("pwa.update")} onClick={() => { const update = updateServiceWorker.current; if (update) void applyPwaUpdate(update) }} size="sm"><Download />{t("pwa.update")}</Button></div></aside>
 }

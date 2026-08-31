@@ -165,7 +165,7 @@ export function parseWeekExpression(
   return { weeks, normalized, errors: [] }
 }
 
-export function formatWeeks(weeks: readonly number[]): string {
+export function formatWeeks(weeks: readonly number[], locale: "zh-CN" | "ja-JP" = "zh-CN"): string {
   const normalizedWeeks = [...new Set(weeks)]
     .filter((week) => Number.isSafeInteger(week) && week > 0)
     .sort((left, right) => left - right)
@@ -188,5 +188,5 @@ export function formatWeeks(weeks: readonly number[]): string {
   }
 
   ranges.push(rangeStart === previous ? `${rangeStart}` : `${rangeStart}-${previous}`)
-  return `${ranges.join(",")}周`
+  return `${ranges.join(",")}${locale === "ja-JP" ? "週" : "周"}`
 }

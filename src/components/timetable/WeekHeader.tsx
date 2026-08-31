@@ -1,43 +1,45 @@
 import { cn } from "@/lib/utils"
 import type { WeekDayView } from "@/lib/timetableView"
+import { useI18n } from "@/i18n/useI18n"
 
 interface WeekHeaderProps {
   days: readonly WeekDayView[]
 }
 
 export function WeekHeader({ days }: WeekHeaderProps) {
+  const { t } = useI18n()
   return (
     <>
-      <div className="z-10 flex items-center justify-center border-b bg-card text-[10px] font-semibold tracking-wide text-muted-foreground">
-        节次
+      <div className="timetable-section-heading z-10 flex items-center justify-center border-b text-[10px] font-medium tracking-[0.12em] text-muted-foreground">
+        TIME
       </div>
       {days.map((day) => (
         <div
           key={day.dayOfWeek}
           aria-current={day.isToday ? "date" : undefined}
-          aria-label={`${day.label} ${day.date}日${day.isToday ? "，今天" : ""}`}
+          aria-label={`${day.label} ${day.date}${day.isToday ? `，${t("timetable.today")}` : ""}`}
           className={cn(
-            "z-10 flex min-w-0 flex-col items-center justify-center border-b border-l bg-card px-0.5 text-center",
-            day.isToday && "bg-primary/10",
+            "timetable-day-heading z-10 flex min-w-0 flex-col items-center justify-center border-b border-l px-0.5 text-center",
+            day.isToday && "is-today",
           )}
         >
           <span
             className={cn(
-              "truncate text-[10px] font-medium text-muted-foreground sm:text-[11px]",
-              day.isToday && "font-semibold text-primary",
+              "truncate text-[10px] font-medium tracking-[0.08em] text-muted-foreground sm:text-[11px]",
+              day.isToday && "text-primary",
             )}
           >
             {day.label}
           </span>
           <span
             className={cn(
-              "mt-0.5 flex size-6 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-150",
-              day.isToday ? "bg-primary text-primary-foreground" : "text-foreground",
+              "timetable-day-date mt-1 flex min-w-6 items-center justify-center px-1 text-sm font-medium tabular-nums transition-colors duration-150",
+              day.isToday ? "text-primary" : "text-foreground",
             )}
           >
             {day.date}
           </span>
-          {day.isToday ? <span className="sr-only">今天</span> : null}
+          {day.isToday ? <span className="sr-only">{t("timetable.today")}</span> : null}
         </div>
       ))}
     </>

@@ -6,12 +6,14 @@ import { CourseFormSheet } from "@/components/timetable/CourseFormSheet"
 import { ImportPreviewSheet } from "@/components/timetable/ImportPreviewSheet"
 import { TimetableGrid } from "@/components/timetable/TimetableGrid"
 import { TimetableHeader } from "@/components/timetable/TimetableHeader"
+import { TimetableWorkspaceAside } from "@/components/workspace/TimetableWorkspaceAside"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { getVisibleCourses, isBuiltinCourse, type CohortYear } from "@/data/builtinTimetables"
 import { getConflictsForCourse, getCourseConflicts } from "@/lib/conflict"
 import { getCurrentSemesterWeek } from "@/lib/date"
 import { getCoursesForWeek } from "@/lib/timetable"
 import { getTodayTodos } from "@/lib/todo"
+import { updateGlassPointerOrigin } from "@/lib/glassPointer"
 import {
   clampWeekToSemester,
   formatSemesterWeekRange,
@@ -21,6 +23,8 @@ import { useTimetableStore } from "@/store/timetableStore"
 import type { CourseImportSummary } from "@/store/timetableStore"
 import type { WorkbookImportResult } from "@/types/importTimetable"
 import type { Course } from "@/types/timetable"
+import { useI18n } from "@/i18n/useI18n"
+import { formatTranslation } from "@/i18n/translate"
 
 type ActiveOverlay =
   | { type: "detail"; course: Course; readOnly: boolean }
@@ -41,10 +45,12 @@ function getFormKey(mode: "create" | "edit", courseId?: string): string {
 }
 
 interface TimetablePageProps {
+  onOpenLearning?: () => void
   onOpenTodos?: () => void
 }
 
-export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
+export function TimetablePage({ onOpenLearning, onOpenTodos }: TimetablePageProps) {
+  const { locale, t } = useI18n()
   const courses = useTimetableStore((state) => state.courses)
   const todos = useTimetableStore((state) => state.todos)
   const semester = useTimetableStore((state) => state.semester)
@@ -61,6 +67,7 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
   const [activeOverlay, setActiveOverlay] = useState<ActiveOverlay>()
   const [importSession, setImportSession] = useState<ImportSession>()
   const [cohortPickerOpen, setCohortPickerOpen] = useState(() => settings.cohortYear === undefined)
+  const [focusedWindow, setFocusedWindow] = useState<"main" | "today" | "learning" | "todo" | "ai">("main")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const today = useMemo(() => new Date(), [])
   const actualSemesterWeek = getCurrentSemesterWeek(semester, today)
@@ -77,6 +84,7 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
     currentWeek,
     showWeekends,
     isViewingActualWeek ? today : undefined,
+    locale,
   )
   const visibleCourses = useMemo(
     () => getVisibleCourses(settings.cohortYear, courses),
@@ -126,11 +134,15 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl">
+    <div className="timetable-page w-full max-w-[100rem]">
+      <div className="timetable-workspace" data-focused-window={focusedWindow} onClick={(event) => {
+        if (event.target === event.currentTarget) setFocusedWindow("main")
+      }}>
+      <section className="workspace-window timetable-main-window" data-focused={focusedWindow === "main" || undefined} onClick={() => setFocusedWindow("main")} onPointerMove={(event) => updateGlassPointerOrigin(event.currentTarget, event.clientX, event.clientY)}>
       <TimetableHeader
         currentWeek={currentWeek}
         currentWeekTarget={currentWeekTarget}
-        dateRange={formatSemesterWeekRange(semester, currentWeek)}
+        dateRange={formatSemesterWeekRange(semester, currentWeek, locale)}
         cohortYear={settings.cohortYear}
         semesterName={semester.name}
         totalWeeks={semester.totalWeeks}
@@ -142,15 +154,16 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
         onGoToCurrentWeek={() => setCurrentWeek(currentWeekTarget)}
         onNextWeek={() => setCurrentWeek(currentWeek + 1)}
         onPreviousWeek={() => setCurrentWeek(currentWeek - 1)}
+        onWeekChange={setCurrentWeek}
       />
       {todayTodoCount > 0 ? (
         <button
           type="button"
-          className="mx-3 mb-3 flex min-h-11 w-[calc(100%-1.5rem)] items-center justify-between rounded-2xl border bg-card px-3 text-left text-sm shadow-xs sm:mx-4 sm:w-[calc(100%-2rem)]"
+          className="timetable-todo-notice mx-3 mb-3 flex min-h-11 w-[calc(100%-1.5rem)] items-center justify-between border px-3 text-left text-sm sm:mx-4 sm:w-[calc(100%-2rem)]"
           onClick={onOpenTodos}
         >
-          <span className="font-medium">今天还有 {todayTodoCount} 个待办</span>
-          <span className="text-xs text-primary">查看</span>
+          <span className="font-medium">{formatTranslation(t("timetable.todayTodos"), { count: todayTodoCount })}</span>
+          <span className="text-xs text-primary">{t("timetable.view")}</span>
         </button>
       ) : null}
       <TimetableGrid
@@ -161,10 +174,13 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
         }
         sectionTimes={sectionTimes}
       />
+      </section>
+      <TimetableWorkspaceAside focusedWindow={focusedWindow} onFocus={setFocusedWindow} onOpenLearning={onOpenLearning} onOpenTodos={onOpenTodos} todayTodoCount={todayTodoCount} />
+      </div>
 
       <input
         ref={fileInputRef}
-        aria-label="选择 Excel 课程表文件"
+        aria-label={t("timetable.chooseExcel")}
         accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
         className="sr-only"
         type="file"
@@ -173,13 +189,13 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
 
       <button
         type="button"
-        aria-label="新增课程"
-        className="timetable-fab flex size-14 touch-manipulation items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg transition-transform duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label={t("timetable.addCourse")}
+        className="timetable-fab flex min-h-11 touch-manipulation items-center justify-center gap-2 bg-primary px-3 text-sm font-medium text-primary-foreground transition-transform duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={() =>
           setActiveOverlay({ type: "form", mode: "create", key: getFormKey("create") })
         }
       >
-        <Plus aria-hidden="true" className="size-6" strokeWidth={2.4} />
+        <Plus aria-hidden="true" className="size-5" strokeWidth={2} /><span className="hidden lg:inline">{t("timetable.addCourse")}</span>
       </button>
 
       {activeOverlay?.type === "detail" ? (
@@ -248,9 +264,9 @@ export function TimetablePage({ onOpenTodos }: TimetablePageProps) {
       ) : null}
       <Sheet open={cohortPickerOpen} onOpenChange={setCohortPickerOpen}>
         <SheetContent side="bottom" className="responsive-bottom-sheet rounded-t-3xl">
-          <SheetHeader><SheetTitle>选择你的年级</SheetTitle><SheetDescription>选择后会显示对应的内置课表，也可随时在顶部切换。</SheetDescription></SheetHeader>
+          <SheetHeader><SheetTitle>{t("timetable.chooseCohort")}</SheetTitle><SheetDescription>{t("timetable.chooseCohortDescription")}</SheetDescription></SheetHeader>
           <div className="grid grid-cols-2 gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            {([2024, 2025] as const).map((cohortYear: CohortYear) => <button key={cohortYear} type="button" className="min-h-12 rounded-2xl border bg-secondary/55 text-sm font-semibold text-secondary-foreground active:bg-primary/15 active:text-primary" onClick={() => { updateSettings({ cohortYear }); setCohortPickerOpen(false) }}>{String(cohortYear).slice(2)}级</button>)}
+            {([2024, 2025] as const).map((cohortYear: CohortYear) => <button key={cohortYear} type="button" className="min-h-12 rounded-2xl border bg-secondary/55 text-sm font-semibold text-secondary-foreground active:bg-primary/15 active:text-primary" onClick={() => { updateSettings({ cohortYear }); setCohortPickerOpen(false) }}>{String(cohortYear).slice(2)}{t("profile.cohortSuffix")}</button>)}
           </div>
         </SheetContent>
       </Sheet>

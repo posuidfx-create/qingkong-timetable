@@ -1,7 +1,8 @@
-import { lazy, Suspense, useCallback, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 
 import { AppShell, type PrimaryPage } from "@/components/layout/AppShell"
 import { PwaUpdatePrompt } from "@/components/layout/PwaUpdatePrompt"
+import { MajorUpdatePrompt } from "@/components/layout/MajorUpdatePrompt"
 import { useAuthSession } from "@/hooks/useAuthSession"
 import { useOnlinePresence } from "@/hooks/useOnlinePresence"
 import { usePrivateUnreadCount } from "@/hooks/usePrivateUnreadCount"
@@ -15,11 +16,16 @@ import { RegisterPage } from "@/pages/RegisterPage"
 import { StatisticsPage } from "@/pages/StatisticsPage"
 import { TimetablePage } from "@/pages/TimetablePage"
 import { ChangelogPage } from "@/pages/ChangelogPage"
+import { LearningPage } from "@/pages/LearningPage"
+import { AboutPage } from "@/pages/AboutPage"
+import { getPrimaryPageFromPath, primaryPagePaths } from "@/lib/appNavigation"
+import { useI18n } from "@/i18n/useI18n"
 const ChatPage = lazy(() => import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage })))
 const TodoPage = lazy(() => import("@/pages/TodoPage").then((module) => ({ default: module.TodoPage })))
 
 export default function App() {
-  const [activePage, setActivePage] = useState<PrimaryPage>("timetable")
+  const { t } = useI18n()
+  const [activePage, setActivePage] = useState<PrimaryPage>(() => getPrimaryPageFromPath(window.location.pathname))
   const [authMode, setAuthMode] = useState<"login" | "register">("login")
   const status = useAuthStore((state) => state.status)
   const user = useAuthStore((state) => state.user)
@@ -30,13 +36,23 @@ export default function App() {
   const { count: unreadChatCount, refresh: refreshUnreadChatCount } = usePrivateUnreadCount(user?.id)
   const todoBadgeCount = useAdminTodoBadge(profile, user?.id)
   const handleUnreadHandled = useCallback(() => refreshUnreadChatCount(), [refreshUnreadChatCount])
+  const handlePageChange = useCallback((page: PrimaryPage) => {
+    setActivePage(page)
+    const path = primaryPagePaths[page]
+    if (window.location.pathname !== path) window.history.pushState(null, "", path)
+  }, [])
+  useEffect(() => {
+    const handlePopState = () => setActivePage(getPrimaryPageFromPath(window.location.pathname))
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [])
 
   const authScreen = getAuthScreen(status, user)
   if (authScreen === "loading") {
-    return <main className="flex min-h-[100dvh] items-center justify-center bg-background p-6 text-sm text-muted-foreground">正在准备晴空课表…</main>
+    return <main className="flex min-h-[100dvh] items-center justify-center bg-background p-6 text-sm text-muted-foreground">{t("auth.preparing")}</main>
   }
   if (authScreen === "unavailable") {
-    return <main className="flex min-h-[100dvh] items-center justify-center bg-background p-4"><section className="w-full max-w-sm rounded-[28px] border bg-card p-6 shadow-sm"><h1 className="text-xl font-semibold">账户服务尚未配置</h1><p className="mt-2 text-sm text-muted-foreground">请在部署平台配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY，然后重新部署。</p></section></main>
+    return <main className="flex min-h-[100dvh] items-center justify-center bg-background p-4"><section className="w-full max-w-sm rounded-[28px] border bg-card p-6 shadow-sm"><h1 className="text-xl font-semibold">{t("auth.notConfigured")}</h1><p className="mt-2 text-sm text-muted-foreground">{t("auth.notConfiguredDescription")}</p></section></main>
   }
   if (authScreen === "auth") {
     return <>{error && <div className="sr-only" role="alert">{error}</div>}{authMode === "login" ? <LoginPage onRegister={() => setAuthMode("register")} /> : <RegisterPage onLogin={() => setAuthMode("login")} />}</>
@@ -44,21 +60,25 @@ export default function App() {
 
   const content =
     activePage === "timetable" ? (
-      <TimetablePage onOpenTodos={() => setActivePage("todo")} />
+      <TimetablePage onOpenLearning={() => handlePageChange("learning")} onOpenTodos={() => handlePageChange("todo")} />
+    ) : activePage === "learning" ? (
+      <LearningPage />
     ) : activePage === "chat" ? (
-      <Suspense fallback={<p className="text-sm text-muted-foreground">正在打开聊天…</p>}><ChatPage onlineUsers={onlineUsers} onUnreadHandled={handleUnreadHandled} /></Suspense>
+      <Suspense fallback={<p className="text-sm text-muted-foreground">{t("auth.openingChat")}</p>}><ChatPage onlineUsers={onlineUsers} onUnreadHandled={handleUnreadHandled} /></Suspense>
     ) : activePage === "todo" ? (
-      <Suspense fallback={<p className="text-sm text-muted-foreground">正在打开待办…</p>}><TodoPage /></Suspense>
+      <Suspense fallback={<p className="text-sm text-muted-foreground">{t("auth.openingTodo")}</p>}><TodoPage /></Suspense>
     ) : activePage === "statistics" ? (
       <StatisticsPage />
     ) : activePage === "changelog" ? (
-      <ChangelogPage onBack={() => setActivePage("profile")} />
+      <ChangelogPage onBack={() => handlePageChange("profile")} />
+    ) : activePage === "about" ? (
+      <AboutPage />
     ) : (
-      <ProfilePage onOpenChangelog={() => setActivePage("changelog")} onOpenStatistics={() => setActivePage("statistics")} />
+      <ProfilePage onOpenAbout={() => handlePageChange("about")} onOpenChangelog={() => handlePageChange("changelog")} onOpenStatistics={() => handlePageChange("statistics")} />
     )
 
-  return <><AppShell activePage={activePage} onPageChange={setActivePage} todoBadgeCount={todoBadgeCount} unreadChatCount={unreadChatCount}>
+  return <><AppShell activePage={activePage} onPageChange={handlePageChange} todoBadgeCount={todoBadgeCount} unreadChatCount={unreadChatCount}>
     {content}
-    <CohortYearSheet open={profile?.cohortYear === null} onOpenChange={() => undefined} required />
-  </AppShell><PwaUpdatePrompt /></>
+    <CohortYearSheet open={profile?.identityType === null} onOpenChange={() => undefined} required />
+  </AppShell><MajorUpdatePrompt onViewUpdates={() => handlePageChange("changelog")} /><PwaUpdatePrompt /></>
 }

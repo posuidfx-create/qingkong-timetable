@@ -32,7 +32,10 @@ import {
 import type { CourseConflictMatch } from "@/lib/conflict"
 import { getCourseTimeLabel } from "@/lib/courseForm"
 import { formatWeeks } from "@/lib/weekParser"
-import type { Course, DayOfWeek, SectionTime } from "@/types/timetable"
+import type { Course, SectionTime } from "@/types/timetable"
+import { useI18n } from "@/i18n/useI18n"
+import { getLocalizedDayLabel } from "@/i18n/format"
+import { formatTranslation } from "@/i18n/translate"
 
 interface CourseDetailSheetProps {
   course?: Course
@@ -43,16 +46,6 @@ interface CourseDetailSheetProps {
   onOpenChange: (open: boolean) => void
   open: boolean
   sectionTimes: readonly SectionTime[]
-}
-
-const dayLabels: Record<DayOfWeek, string> = {
-  1: "周一",
-  2: "周二",
-  3: "周三",
-  4: "周四",
-  5: "周五",
-  6: "周六",
-  7: "周日",
 }
 
 interface DetailItemProps {
@@ -85,6 +78,7 @@ export function CourseDetailSheet({
   open,
   sectionTimes,
 }: CourseDetailSheetProps) {
+  const { locale, t } = useI18n()
   const timeLabel = course ? getCourseTimeLabel(course, sectionTimes) : undefined
 
   return (
@@ -97,32 +91,32 @@ export function CourseDetailSheet({
         <SheetHeader className="pr-14 pb-3">
           <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <BookOpenText aria-hidden="true" className="size-4" />
-            课程详情
-            {readOnly ? <span className="rounded-full bg-secondary px-2 py-0.5">内置课表</span> : null}
+            {t("timetable.courseDetails")}
+            {readOnly ? <span className="rounded-full bg-secondary px-2 py-0.5">{t("timetable.builtin")}</span> : null}
           </div>
           <SheetTitle className="mt-2 break-words text-xl font-semibold leading-7">
-            {course?.name ?? "课程详情"}
+            {course?.name ?? t("timetable.courseDetails")}
           </SheetTitle>
           <SheetDescription>
-            {readOnly ? "内置课表仅供查看；导入和手动新增的课程可继续编辑。" : "查看课程安排，或继续编辑课程。"}
+            {t(readOnly ? "timetable.readOnlyDescription" : "timetable.detailDescription")}
           </SheetDescription>
         </SheetHeader>
 
         {course ? (
           <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
             <div className="grid gap-2 sm:grid-cols-2">
-              {course.teacher ? <DetailItem icon={UserRound} label="教师" value={course.teacher} /> : null}
+              {course.teacher ? <DetailItem icon={UserRound} label={t("timetable.teacher")} value={course.teacher} /> : null}
               {course.academicAdvisor ? (
-                <DetailItem icon={GraduationCap} label="学术导师" value={course.academicAdvisor} />
+                <DetailItem icon={GraduationCap} label={t("timetable.advisor")} value={course.academicAdvisor} />
               ) : null}
-              {course.classroom ? <DetailItem icon={MapPin} label="教室" value={course.classroom} /> : null}
+              {course.classroom ? <DetailItem icon={MapPin} label={t("timetable.classroom")} value={course.classroom} /> : null}
               <DetailItem
                 icon={Clock3}
-                label="时间"
-                value={`${dayLabels[course.dayOfWeek]} 第${course.startSection}-${course.endSection}节${timeLabel ? ` · ${timeLabel}` : ""}`}
+                label={t("timetable.time")}
+                value={`${getLocalizedDayLabel(course.dayOfWeek, locale)} · ${formatTranslation(t("timetable.sectionNumber"), { section: course.startSection === course.endSection ? course.startSection : `${course.startSection}–${course.endSection}` })}${timeLabel ? ` · ${timeLabel}` : ""}`}
               />
-              <DetailItem icon={CalendarRange} label="周次" value={formatWeeks(course.weeks)} />
-              {course.note ? <DetailItem icon={NotebookPen} label="备注" value={course.note} /> : null}
+              <DetailItem icon={CalendarRange} label={t("timetable.weeks")} value={formatWeeks(course.weeks, locale)} />
+              {course.note ? <DetailItem icon={NotebookPen} label={t("timetable.note")} value={course.note} /> : null}
             </div>
 
             {conflicts.length > 0 ? (
@@ -133,18 +127,15 @@ export function CourseDetailSheet({
                 <div className="flex items-center gap-2">
                   <TriangleAlert aria-hidden="true" className="size-4 text-amber-700 dark:text-amber-300" />
                   <h3 id="course-detail-conflicts" className="text-sm font-semibold">
-                    时间冲突
+                    {t("timetable.conflict")}
                   </h3>
                 </div>
                 <ul className="mt-2 space-y-1 text-xs leading-5">
                   {conflicts.map((conflict) => {
-                    const sectionText =
-                      conflict.startSection === conflict.endSection
-                        ? `第${conflict.startSection}节`
-                        : `第${conflict.startSection}-${conflict.endSection}节`
+                    const sectionText = formatTranslation(t("timetable.sectionNumber"), { section: conflict.startSection === conflict.endSection ? conflict.startSection : `${conflict.startSection}–${conflict.endSection}` })
                     return (
                       <li key={conflict.course.id}>
-                        与“{conflict.course.name}”冲突 · {formatWeeks(conflict.overlappingWeeks)} · {sectionText}
+                        {formatTranslation(t("timetable.conflictWith"), { course: conflict.course.name })} · {formatWeeks(conflict.overlappingWeeks, locale)} · {sectionText}
                       </li>
                     )
                   })}
@@ -154,7 +145,7 @@ export function CourseDetailSheet({
 
             {readOnly ? (
               <p className="mt-3 rounded-2xl bg-primary/8 p-3 text-xs leading-5 text-primary">
-                这是当前年级的内置课程。你可以点击右下角新增自己的课程。
+                {t("timetable.builtinHint")}
               </p>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -164,7 +155,7 @@ export function CourseDetailSheet({
                   onClick={() => onEdit(course)}
                 >
                   <Pencil aria-hidden="true" className="size-4" />
-                  编辑课程
+                  {t("timetable.editCourse")}
                 </button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -173,22 +164,22 @@ export function CourseDetailSheet({
                       className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
                     >
                       <Trash2 aria-hidden="true" className="size-4" />
-                      删除课程
+                      {t("timetable.deleteCourse")}
                     </button>
                   </AlertDialogTrigger>
                   <AlertDialogContent size="sm">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>确定删除“{course.name}”吗？</AlertDialogTitle>
-                      <AlertDialogDescription>删除后无法恢复。</AlertDialogDescription>
+                      <AlertDialogTitle>{t("timetable.deleteTitle")} · {course.name}</AlertDialogTitle>
+                      <AlertDialogDescription>{t("timetable.deleteDescription")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="min-h-11">取消</AlertDialogCancel>
+                      <AlertDialogCancel className="min-h-11">{t("common.cancel")}</AlertDialogCancel>
                       <AlertDialogAction
                         variant="destructive"
                         className="min-h-11"
                         onClick={() => onDelete(course)}
                       >
-                        删除
+                        {t("common.delete")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

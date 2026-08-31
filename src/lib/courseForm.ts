@@ -1,6 +1,8 @@
 import { getConflictsForCourse, type CourseConflictMatch } from "@/lib/conflict"
 import { isValidSectionRange } from "@/lib/timetable"
 import { formatWeeks, parseWeekExpression } from "@/lib/weekParser"
+import type { AppLocale } from "@/i18n/locale"
+import { formatTranslation, translate } from "@/i18n/translate"
 import type {
   Course,
   DayOfWeek,
@@ -152,20 +154,23 @@ function optionalTrimmed(value: string): string | undefined {
 export function validateCourseForm(
   values: CourseFormValues,
   totalWeeks: number,
+  locale: AppLocale = "zh-CN",
 ): CourseFormValidationResult {
   const errors: CourseFormErrors = {}
   const name = values.name.trim()
-  if (name.length === 0) errors.name = "请输入课程名称"
-  else if (name.length > MAX_NAME_LENGTH) errors.name = `课程名称不能超过 ${MAX_NAME_LENGTH} 个字符`
+  if (name.length === 0) errors.name = translate(locale, "timetable.validationNameRequired")
+  else if (name.length > MAX_NAME_LENGTH) errors.name = translate(locale, "timetable.validationNameLength")
 
-  if (!DAY_VALUES.includes(values.dayOfWeek)) errors.dayOfWeek = "请选择有效的星期"
+  if (!DAY_VALUES.includes(values.dayOfWeek)) errors.dayOfWeek = translate(locale, "timetable.validationDay")
   if (!isValidSectionRange(values.startSection, values.endSection)) {
-    errors.sections = "结束节次不能早于开始节次，且节次必须在 1～11 之间"
+    errors.sections = translate(locale, "timetable.validationSections")
   }
 
   const weekResult = parseWeekExpression(buildWeekExpression(values), { maxWeek: totalWeeks })
   if (weekResult.errors.length > 0 || weekResult.weeks.length === 0) {
-    errors.weeks = weekResult.errors[0]?.message ?? "请至少选择一个上课周次"
+    errors.weeks = locale === "zh-CN" && weekResult.errors[0]
+      ? weekResult.errors[0].message
+      : translate(locale, "timetable.validationWeeks")
   }
 
   const shortFields = [
@@ -175,11 +180,12 @@ export function validateCourseForm(
   ] as const
   for (const [field, value, label] of shortFields) {
     if (value.trim().length > MAX_SHORT_TEXT_LENGTH) {
-      errors[field] = `${label}不能超过 ${MAX_SHORT_TEXT_LENGTH} 个字符`
+      const fieldLabel = translate(locale, label === "教师" ? "timetable.teacher" : label === "学术导师" ? "timetable.advisor" : "timetable.classroom")
+      errors[field] = formatTranslation(translate(locale, "timetable.validationShort"), { field: fieldLabel })
     }
   }
   if (values.note.trim().length > MAX_NOTE_LENGTH) {
-    errors.note = `备注不能超过 ${MAX_NOTE_LENGTH} 个字符`
+    errors.note = translate(locale, "timetable.validationNote")
   }
 
   if (Object.keys(errors).length > 0) return { valid: false, errors }
@@ -222,10 +228,11 @@ export function findCourseConflictMatches(
   return getConflictsForCourse([candidate, ...comparableCourses], candidate.id)
 }
 
-export function formatConflictMessage(match: CourseConflictMatch): string {
+export function formatConflictMessage(match: CourseConflictMatch, locale: AppLocale = "zh-CN"): string {
   const sectionText =
     match.startSection === match.endSection
       ? `第${match.startSection}节`
       : `第${match.startSection}-${match.endSection}节`
-  return `与“${match.course.name}”在${formatWeeks(match.overlappingWeeks)}、${sectionText}发生冲突`
+  if (locale === "ja-JP") return `「${match.course.name}」と${formatWeeks(match.overlappingWeeks, locale)}・${sectionText.replace("第", "").replace("节", "限")}が重複しています`
+  return `与“${match.course.name}”在${formatWeeks(match.overlappingWeeks, locale)}、${sectionText}发生冲突`
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useI18n } from "@/i18n/useI18n"
 
 interface PageScaffoldProps {
   description: string
@@ -8,6 +9,7 @@ interface PageScaffoldProps {
 }
 
 export function PageScaffold({ description, icon, status, title }: PageScaffoldProps) {
+  const { t } = useI18n()
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-md">
       <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -19,7 +21,7 @@ export function PageScaffold({ description, icon, status, title }: PageScaffoldP
       <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{description}</p>
 
       <div className="mt-6 rounded-2xl border bg-card p-4 text-card-foreground shadow-xs">
-        <p className="text-sm font-medium">工程基础已就绪</p>
+        <p className="text-sm font-medium">{t("common.engineeringReady")}</p>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">{status}</p>
       </div>
     </section>

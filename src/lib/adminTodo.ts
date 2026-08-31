@@ -1,5 +1,7 @@
 import type { Profile } from "@/types/auth"
 import type { AdminTodo, AdminTodoDraft, AdminTodoTargetType } from "@/types/adminTodo"
+import type { AppLocale } from "@/i18n/locale"
+import { translate } from "@/i18n/translate"
 
 export function buildAdminTodoCreateRow(draft: AdminTodoDraft, authUserId: string) {
   if (!authUserId) throw new Error("登录状态已失效，请重新登录。")
@@ -44,10 +46,10 @@ export function getVisibleAdminTodoTabs(profile: Profile): Array<"mine" | "cohor
   return profile.cohortYear === 2024 ? ["mine", "cohort_2024"] : profile.cohortYear === 2025 ? ["mine", "cohort_2025"] : ["mine"]
 }
 
-export function getAdminTodoTargetLabel(targetType: AdminTodoTargetType, targetCohort: 2024 | 2025 | null): string {
-  if (targetType === "all") return "全部用户"
-  if (targetType === "users") return "指定用户"
-  return targetCohort === 2024 ? "24级" : "25级"
+export function getAdminTodoTargetLabel(targetType: AdminTodoTargetType, targetCohort: 2024 | 2025 | null, locale: AppLocale = "zh-CN"): string {
+  if (targetType === "all") return translate(locale, "todo.audienceAll")
+  if (targetType === "users") return translate(locale, "todo.audienceUsers")
+  return translate(locale, targetCohort === 2024 ? "profile.grade24" : "profile.grade25")
 }
 
 export function sortAdminTodos(todos: readonly AdminTodo[]): AdminTodo[] {

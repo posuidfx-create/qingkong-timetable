@@ -4,6 +4,7 @@ import { getCourseConflicts } from "@/lib/conflict"
 import { getSemesterWeekDateRange } from "@/lib/date"
 import { isValidSectionRange } from "@/lib/timetable"
 import type { Course, DayOfWeek, Semester } from "@/types/timetable"
+import type { AppLocale } from "@/i18n/locale"
 
 export interface WeekDayView {
   dayOfWeek: DayOfWeek
@@ -31,13 +32,11 @@ const WEEKDAY_LABELS: Record<DayOfWeek, string> = {
 }
 
 export const COURSE_COLOR_PALETTE = [
-  "#789A88",
-  "#8795B5",
-  "#9584AD",
-  "#AE8978",
-  "#7695A8",
-  "#A28E72",
-  "#A08088",
+  "#4EB6CE",
+  "#7EBFD0",
+  "#A9DCE7",
+  "#28728A",
+  "#6FAFC0",
 ] as const
 
 export function clampWeekToSemester(week: number, totalWeeks: number): number {
@@ -54,6 +53,7 @@ export function getWeekDayViews(
   week: number,
   showWeekends: boolean,
   today?: Date,
+  locale: AppLocale = "zh-CN",
 ): WeekDayView[] {
   const range = getSemesterWeekDateRange(semester, week)
   if (!range) return []
@@ -62,7 +62,7 @@ export function getWeekDayViews(
     const fullDate = addDays(range.start, dayOfWeek - 1)
     return {
       dayOfWeek,
-      label: WEEKDAY_LABELS[dayOfWeek],
+      label: locale === "ja-JP" ? new Intl.DateTimeFormat(locale, { weekday: "short" }).format(fullDate) : WEEKDAY_LABELS[dayOfWeek],
       date: getDate(fullDate),
       fullDate,
       isToday: today ? isSameDay(fullDate, today) : false,
@@ -70,9 +70,15 @@ export function getWeekDayViews(
   })
 }
 
-export function formatSemesterWeekRange(semester: Semester, week: number): string {
+export function formatSemesterWeekRange(semester: Semester, week: number, locale: AppLocale = "zh-CN"): string {
   const range = getSemesterWeekDateRange(semester, week)
-  if (!range) return "日期待设置"
+  if (!range) return locale === "ja-JP" ? "日付未設定" : "日期待设置"
+
+  if (locale === "ja-JP") {
+    const start = new Intl.DateTimeFormat(locale, { month: "long", day: "numeric" }).format(range.start)
+    const end = new Intl.DateTimeFormat(locale, { month: "long", day: "numeric" }).format(range.end)
+    return `${start} - ${end}`
+  }
 
   if (range.start.getFullYear() !== range.end.getFullYear()) {
     return `${format(range.start, "yyyy年M月d日")} - ${format(range.end, "yyyy年M月d日")}`

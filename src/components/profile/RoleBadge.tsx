@@ -1,6 +1,7 @@
 import { ShieldCheck, UserRound } from "lucide-react"
 
-import { getRoleLabel } from "@/lib/auth"
+import { getLocalizedRoleLabel } from "@/i18n/format"
+import { useI18n } from "@/i18n/useI18n"
 import { cn } from "@/lib/utils"
 import type { AppRole } from "@/types/auth"
 
@@ -11,6 +12,7 @@ const roleStyles: Record<AppRole, string> = {
 }
 
 export function RoleBadge({ role }: { role: AppRole }) {
+  const { locale } = useI18n()
   const Icon = role === "user" ? UserRound : ShieldCheck
-  return <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium", roleStyles[role])}><Icon className="size-3" />{getRoleLabel(role)}</span>
+  return <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium", roleStyles[role])}><Icon className="size-3" />{getLocalizedRoleLabel(role, locale)}</span>
 }

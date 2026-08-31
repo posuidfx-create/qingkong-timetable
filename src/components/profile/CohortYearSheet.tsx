@@ -1,23 +1,50 @@
 import { useState } from "react"
+import { GraduationCap, Presentation } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { updateOwnCohortYear } from "@/lib/profiles"
+import { useI18n } from "@/i18n/useI18n"
+import { updateOwnIdentity } from "@/lib/profiles"
 import { authStore, useAuthStore } from "@/store/authStore"
-import type { ProfileCohortYear } from "@/types/auth"
+import type { ProfileCohortYear, ProfileIdentityType } from "@/types/auth"
 
-export function CohortYearSheet({ open, onOpenChange, required = false }: { open: boolean; onOpenChange: (open: boolean) => void; required?: boolean }) {
+interface CohortYearSheetProps { open: boolean; onOpenChange: (open: boolean) => void; required?: boolean }
+
+export function CohortYearSheet({ open, onOpenChange, required = false }: CohortYearSheetProps) {
+  const { t } = useI18n()
   const profile = useAuthStore((state) => state.profile)
-  const [pending, setPending] = useState<ProfileCohortYear | null>(null)
+  const [identityType, setIdentityType] = useState<ProfileIdentityType | null>(profile?.identityType ?? null)
+  const [cohortYear, setCohortYear] = useState<ProfileCohortYear | null>(profile?.cohortYear ?? null)
+  const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [confirmYear, setConfirmYear] = useState<ProfileCohortYear | null>(null)
-  const save = async (cohortYear: ProfileCohortYear) => {
-    setPending(cohortYear); setError(null)
-    try { const updated = await updateOwnCohortYear(cohortYear); authStore.getState().updateProfile(updated); onOpenChange(false) }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "年级保存失败。") }
-    finally { setPending(null) }
+  const chooseIdentity = (next: ProfileIdentityType) => { setIdentityType(next); if (next === "teacher") setCohortYear(null) }
+  const canSave = identityType === "teacher" || (identityType === "student" && cohortYear !== null)
+  const save = async () => {
+    if (!profile || !identityType || !canSave) return
+    setPending(true); setError(null)
+    try { const updated = await updateOwnIdentity(profile, identityType, cohortYear); authStore.getState().updateProfile(updated); onOpenChange(false) }
+    catch (reason) { setError(reason instanceof Error ? reason.message : t("common.error")) }
+    finally { setPending(false) }
   }
-  const choose = (year: ProfileCohortYear) => { if (required) void save(year); else setConfirmYear(year) }
-  return <><Sheet open={open} onOpenChange={(next) => { if (!required || next) onOpenChange(next) }}><SheetContent side="bottom" className="responsive-bottom-sheet rounded-t-3xl"><SheetHeader><SheetTitle>{required ? "选择你的年级" : "修改所属年级"}</SheetTitle><SheetDescription>所属年级只决定可访问的年级聊天室，不会修改你当前查看的课表年级。</SheetDescription></SheetHeader><div className="space-y-3 px-4 pb-5"><Button className="h-12 w-full" disabled={pending !== null || profile?.cohortYear === 2024} onClick={() => choose(2024)}>我是 24 级</Button><Button className="h-12 w-full" disabled={pending !== null || profile?.cohortYear === 2025} onClick={() => choose(2025)} variant="secondary">我是 25 级</Button>{!required && <p className="text-center text-xs text-muted-foreground">修改后聊天室访问权限会立即更新。</p>}{error && <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}</div></SheetContent></Sheet><AlertDialog open={confirmYear !== null} onOpenChange={(next) => { if (!next) setConfirmYear(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>确认修改所属年级？</AlertDialogTitle><AlertDialogDescription>这只会变更聊天室访问权限，不会修改课表页面当前查看的年级。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => { if (confirmYear) void save(confirmYear) }}>确认修改</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></>
+  const handleOpenChange = (next: boolean) => {
+    if (required && !next) return
+    if (!next) { setIdentityType(profile?.identityType ?? null); setCohortYear(profile?.cohortYear ?? null); setError(null) }
+    onOpenChange(next)
+  }
+
+  return <Sheet open={open} onOpenChange={handleOpenChange}><SheetContent side="bottom" className="responsive-bottom-sheet rounded-t-3xl">
+    <SheetHeader><SheetTitle>{t("profile.chooseIdentity")}</SheetTitle><SheetDescription>{t("profile.chooseIdentityDescription")}</SheetDescription></SheetHeader>
+    <div className="space-y-5 px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]">
+      <fieldset><legend className="mb-2 text-sm font-medium">{t("profile.identity")}</legend><div className="grid grid-cols-2 gap-2">
+        <Button className="h-12" onClick={() => chooseIdentity("student")} type="button" variant={identityType === "student" ? "default" : "outline"}><GraduationCap />{t("profile.student")}</Button>
+        <Button className="h-12" onClick={() => chooseIdentity("teacher")} type="button" variant={identityType === "teacher" ? "default" : "outline"}><Presentation />{t("profile.teacher")}</Button>
+      </div></fieldset>
+      {identityType === "student" ? <fieldset><legend className="mb-2 text-sm font-medium">{t("profile.grade")}</legend><div className="grid grid-cols-2 gap-2">
+        <Button className="h-12" onClick={() => setCohortYear(2024)} type="button" variant={cohortYear === 2024 ? "default" : "outline"}>{t("profile.grade24")}</Button>
+        <Button className="h-12" onClick={() => setCohortYear(2025)} type="button" variant={cohortYear === 2025 ? "default" : "outline"}>{t("profile.grade25")}</Button>
+      </div></fieldset> : null}
+      {error ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p> : null}
+      <Button className="h-12 w-full" disabled={pending || !canSave} onClick={() => void save()}>{pending ? t("todo.saving") : t("common.save")}</Button>
+    </div>
+  </SheetContent></Sheet>
 }

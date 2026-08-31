@@ -33,6 +33,9 @@ import { createUniqueId } from "@/lib/id"
 import { COURSE_COLOR_PALETTE } from "@/lib/timetableView"
 import { cn } from "@/lib/utils"
 import type { Course, DayOfWeek, SectionTime } from "@/types/timetable"
+import { useI18n } from "@/i18n/useI18n"
+import { getLocalizedDayLabel } from "@/i18n/format"
+import { formatTranslation } from "@/i18n/translate"
 
 export type CourseFormMode = "create" | "edit"
 
@@ -47,15 +50,7 @@ interface CourseFormSheetProps {
   totalWeeks: number
 }
 
-const dayOptions: readonly { value: DayOfWeek; label: string }[] = [
-  { value: 1, label: "周一" },
-  { value: 2, label: "周二" },
-  { value: 3, label: "周三" },
-  { value: 4, label: "周四" },
-  { value: 5, label: "周五" },
-  { value: 6, label: "周六" },
-  { value: 7, label: "周日" },
-]
+const dayValues: readonly DayOfWeek[] = [1, 2, 3, 4, 5, 6, 7]
 
 interface FieldErrorProps {
   id: string
@@ -80,6 +75,7 @@ export function CourseFormSheet({
   sectionTimes,
   totalWeeks,
 }: CourseFormSheetProps) {
+  const { locale, t } = useI18n()
   const [values, setValues] = useState(() => createCourseFormValues(course, totalWeeks))
   const [errors, setErrors] = useState<CourseFormErrors>({})
   const [pendingCourse, setPendingCourse] = useState<Course>()
@@ -103,7 +99,7 @@ export function CourseFormSheet({
     event.preventDefault()
     if (isSubmitting) return
 
-    const validation = validateCourseForm(values, totalWeeks)
+    const validation = validateCourseForm(values, totalWeeks, locale)
     setErrors(validation.errors)
     if (!validation.valid || !validation.draft) return
 
@@ -140,17 +136,17 @@ export function CourseFormSheet({
         <div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/25" />
         <SheetHeader className="pr-14 pb-3">
           <SheetTitle className="text-xl font-semibold">
-            {mode === "create" ? "新增课程" : "编辑课程"}
+            {t(mode === "create" ? "timetable.addCourse" : "timetable.editCourse")}
           </SheetTitle>
           <SheetDescription>
-            {mode === "create" ? "填写课程安排，保存后会同步到本地。" : "修改后将立即更新课程表。"}
+            {t(mode === "create" ? "timetable.formCreateDescription" : "timetable.formEditDescription")}
           </SheetDescription>
         </SheetHeader>
 
         <form className="flex min-h-0 flex-1 flex-col overflow-hidden" onSubmit={handleSubmit}>
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-5">
             <div>
-              <Label htmlFor="course-name">课程名称 *</Label>
+              <Label htmlFor="course-name">{t("timetable.courseName")} *</Label>
               <Input
                 id="course-name"
                 autoFocus
@@ -158,7 +154,7 @@ export function CourseFormSheet({
                 aria-invalid={Boolean(errors.name)}
                 className="mt-2 h-11"
                 maxLength={100}
-                placeholder="例如：综合日语（三）"
+                placeholder={t("timetable.courseNamePlaceholder")}
                 value={values.name}
                 onChange={(event) => updateValues({ name: event.target.value })}
               />
@@ -167,21 +163,21 @@ export function CourseFormSheet({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>星期 *</Label>
+                <Label>{t("timetable.weekday")} *</Label>
                 <Select
                   value={String(values.dayOfWeek)}
                   onValueChange={(nextValue) => {
-                    const selected = dayOptions.find((day) => String(day.value) === nextValue)
-                    if (selected) updateValues({ dayOfWeek: selected.value })
+                    const selected = dayValues.find((day) => String(day) === nextValue)
+                    if (selected) updateValues({ dayOfWeek: selected })
                   }}
                 >
-                  <SelectTrigger aria-label="星期" className="mt-2 h-11 w-full" aria-invalid={Boolean(errors.dayOfWeek)}>
+                  <SelectTrigger aria-label={t("timetable.weekday")} className="mt-2 h-11 w-full" aria-invalid={Boolean(errors.dayOfWeek)}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent position="popper">
-                    {dayOptions.map((day) => (
-                      <SelectItem key={day.value} value={String(day.value)} className="min-h-10">
-                        {day.label}
+                    {dayValues.map((day) => (
+                      <SelectItem key={day} value={String(day)} className="min-h-10">
+                        {getLocalizedDayLabel(day, locale)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -190,15 +186,15 @@ export function CourseFormSheet({
               <div className="rounded-xl bg-muted/55 px-3 py-2">
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock3 aria-hidden="true" className="size-3.5" />
-                  时间预览
+                  {t("timetable.timePreview")}
                 </p>
-                <p className="mt-1.5 text-sm font-semibold tabular-nums">{timePreview ?? "时间待设置"}</p>
+                <p className="mt-1.5 text-sm font-semibold tabular-nums">{timePreview ?? t("timetable.timePending")}</p>
               </div>
             </div>
             <FieldError id="course-day-error" message={errors.dayOfWeek} />
 
             <div>
-              <Label>上课节次 *</Label>
+              <Label>{t("timetable.section")} *</Label>
               <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <Select
                   value={String(values.startSection)}
@@ -218,18 +214,18 @@ export function CourseFormSheet({
                     }
                   }}
                 >
-                  <SelectTrigger aria-label="开始节次" className="h-11 w-full" aria-invalid={Boolean(errors.sections)}>
+                  <SelectTrigger aria-label={t("timetable.startSection")} className="h-11 w-full" aria-invalid={Boolean(errors.sections)}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent position="popper">
                     {sectionTimes.map((item) => (
                       <SelectItem key={item.section} value={String(item.section)} className="min-h-10">
-                        第 {item.section} 节
+                        {formatTranslation(t("timetable.sectionNumber"), { section: item.section })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-muted-foreground">至</span>
+                <span className="text-muted-foreground">{t("timetable.to")}</span>
                 <Select
                   value={String(values.endSection)}
                   onValueChange={(nextValue) => {
@@ -239,13 +235,13 @@ export function CourseFormSheet({
                     if (selected) updateValues({ endSection: selected })
                   }}
                 >
-                  <SelectTrigger aria-label="结束节次" className="h-11 w-full" aria-invalid={Boolean(errors.sections)}>
+                  <SelectTrigger aria-label={t("timetable.endSection")} className="h-11 w-full" aria-invalid={Boolean(errors.sections)}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent position="popper">
                     {endSectionOptions.map((item) => (
                       <SelectItem key={item.section} value={String(item.section)} className="min-h-10">
-                        第 {item.section} 节
+                        {formatTranslation(t("timetable.sectionNumber"), { section: item.section })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -263,7 +259,7 @@ export function CourseFormSheet({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="course-teacher">教师</Label>
+                <Label htmlFor="course-teacher">{t("timetable.teacher")}</Label>
                 <Input
                   id="course-teacher"
                   className="mt-2 h-11"
@@ -274,7 +270,7 @@ export function CourseFormSheet({
                 <FieldError id="course-teacher-error" message={errors.teacher} />
               </div>
               <div>
-                <Label htmlFor="course-advisor">学术导师</Label>
+                <Label htmlFor="course-advisor">{t("timetable.advisor")}</Label>
                 <Input
                   id="course-advisor"
                   className="mt-2 h-11"
@@ -285,12 +281,12 @@ export function CourseFormSheet({
                 <FieldError id="course-advisor-error" message={errors.academicAdvisor} />
               </div>
               <div>
-                <Label htmlFor="course-classroom">教室</Label>
+                <Label htmlFor="course-classroom">{t("timetable.classroom")}</Label>
                 <Input
                   id="course-classroom"
                   className="mt-2 h-11"
                   maxLength={80}
-                  placeholder="例如：A7-322"
+                  placeholder={t("timetable.classroomPlaceholder")}
                   value={values.classroom}
                   onChange={(event) => updateValues({ classroom: event.target.value })}
                 />
@@ -301,12 +297,12 @@ export function CourseFormSheet({
             <fieldset>
               <legend className="flex items-center gap-2 text-sm font-medium">
                 <Palette aria-hidden="true" className="size-4 text-muted-foreground" />
-                课程颜色
+                {t("timetable.courseColor")}
               </legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  aria-label="自动分配课程颜色"
+                  aria-label={t("timetable.autoColorLabel")}
                   aria-pressed={values.color === ""}
                   className={cn(
                     "flex size-11 items-center justify-center rounded-full border bg-muted text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
@@ -314,13 +310,13 @@ export function CourseFormSheet({
                   )}
                   onClick={() => updateValues({ color: "" })}
                 >
-                  自动
+                  {t("timetable.autoColor")}
                 </button>
                 {COURSE_COLOR_PALETTE.map((color) => (
                   <button
                     key={color}
                     type="button"
-                    aria-label={`选择课程颜色 ${color}`}
+                    aria-label={`${t("timetable.chooseColor")} ${color}`}
                     aria-pressed={values.color === color}
                     className={cn(
                       "flex size-11 items-center justify-center rounded-full border border-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
@@ -336,13 +332,13 @@ export function CourseFormSheet({
             </fieldset>
 
             <div>
-              <Label htmlFor="course-note">备注</Label>
+              <Label htmlFor="course-note">{t("timetable.note")}</Label>
               <Textarea
                 id="course-note"
                 aria-invalid={Boolean(errors.note)}
                 className="mt-2"
                 maxLength={500}
-                placeholder="记录课程要求或其他信息"
+                placeholder={t("timetable.notePlaceholder")}
                 value={values.note}
                 onChange={(event) => updateValues({ note: event.target.value })}
               />
@@ -368,14 +364,14 @@ export function CourseFormSheet({
               className="min-h-11 rounded-xl border bg-background text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               onClick={() => onOpenChange(false)}
             >
-              取消
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
               className="min-h-11 rounded-xl bg-primary text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:opacity-50"
               disabled={isSubmitting}
             >
-              {mode === "create" ? "保存课程" : "保存修改"}
+              {t(mode === "create" ? "timetable.saveCourse" : "timetable.saveChanges")}
             </button>
           </div>
         </form>

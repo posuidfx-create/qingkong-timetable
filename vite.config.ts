@@ -15,15 +15,21 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       includeAssets: ["icon-192.svg", "icon-512.svg"],
+      workbox: {
+        // Keep the lightweight static fallback available offline. The 31 MB
+        // video remains an on-demand resource instead of inflating app install.
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp}"],
+        globIgnores: ["wallpapers/water-01.png"],
+      },
       manifest: {
-        name: "晴空课表",
-        short_name: "晴空课表",
-        description: "温柔好用的大学课程表与待办助手",
+        name: "努力也是一种天赋",
+        short_name: "努力天赋",
+        description: "记录每一天的学习与成长",
         lang: "zh-CN",
         start_url: "/",
         display: "standalone",
-        theme_color: "#fffdf8",
-        background_color: "#fffdf8",
+        theme_color: "#f7f7f3",
+        background_color: "#f7f7f3",
         icons: [
           {
             src: "/icon-192.svg",

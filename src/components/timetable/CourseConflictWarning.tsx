@@ -2,6 +2,7 @@ import { TriangleAlert } from "lucide-react"
 
 import { type CourseConflictMatch } from "@/lib/conflict"
 import { formatConflictMessage } from "@/lib/courseForm"
+import { useI18n } from "@/i18n/useI18n"
 
 interface CourseConflictWarningProps {
   conflicts: readonly CourseConflictMatch[]
@@ -16,6 +17,7 @@ export function CourseConflictWarning({
   onCancel,
   onConfirm,
 }: CourseConflictWarningProps) {
+  const { locale, t } = useI18n()
   return (
     <section
       aria-labelledby="course-conflict-title"
@@ -25,11 +27,11 @@ export function CourseConflictWarning({
         <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300" />
         <div className="min-w-0">
           <h3 id="course-conflict-title" className="text-sm font-semibold">
-            发现课程冲突
+            {t("timetable.conflictFound")}
           </h3>
           <ul className="mt-1.5 space-y-1 text-xs leading-5">
             {conflicts.map((conflict) => (
-              <li key={conflict.course.id}>{formatConflictMessage(conflict)}</li>
+              <li key={conflict.course.id}>{formatConflictMessage(conflict, locale)}</li>
             ))}
           </ul>
         </div>
@@ -40,7 +42,7 @@ export function CourseConflictWarning({
           className="min-h-11 rounded-xl border border-amber-600/25 bg-background/65 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           onClick={onCancel}
         >
-          返回修改
+          {t("timetable.backToEdit")}
         </button>
         <button
           type="button"
@@ -48,7 +50,7 @@ export function CourseConflictWarning({
           disabled={disabled}
           onClick={onConfirm}
         >
-          仍然保存
+          {t("timetable.saveAnyway")}
         </button>
       </div>
     </section>

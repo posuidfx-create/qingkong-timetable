@@ -21,6 +21,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { exportAppData, previewImportedAppData, type ImportPreview, type PersistedAppState } from "@/lib/storage"
+import { useI18n } from "@/i18n/useI18n"
 
 interface DataManagementSheetProps {
   open: boolean
@@ -54,6 +55,7 @@ export function DataManagementSheet({
   onRestore,
   onClearAll,
 }: DataManagementSheetProps) {
+  const { t } = useI18n()
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<ImportPreview>()
   const [readError, setReadError] = useState<string>()
@@ -72,13 +74,13 @@ export function DataManagementSheet({
     try {
       setPreview(previewImportedAppData(await file.text()))
     } catch {
-      setReadError("无法读取该备份文件，请重新选择 JSON 文件。")
+      setReadError(t("profile.readBackupFailed"))
     }
   }
 
   function handleRestore() {
     if (!preview || !onRestore(preview)) {
-      setReadError("恢复失败，当前数据没有被修改。")
+      setReadError(t("profile.restoreFailed"))
       return
     }
     resetPreview()
@@ -87,7 +89,7 @@ export function DataManagementSheet({
 
   function handleClearAll() {
     if (!onClearAll()) {
-      setReadError("无法清除本地数据；当前页面数据未被修改。")
+      setReadError(t("profile.clearFailed"))
       return
     }
     resetPreview()
@@ -100,23 +102,23 @@ export function DataManagementSheet({
     <Sheet open={open} onOpenChange={(nextOpen) => { onOpenChange(nextOpen); if (!nextOpen) resetPreview() }}>
       <SheetContent side="bottom" className="responsive-bottom-sheet max-h-[90dvh] rounded-t-3xl">
         <SheetHeader>
-          <SheetTitle>数据备份与恢复</SheetTitle>
-          <SheetDescription>备份仅保存在你的设备上，恢复前会先验证数据。</SheetDescription>
+          <SheetTitle>{t("profile.data")}</SheetTitle>
+          <SheetDescription>{t("profile.dataDescription")}</SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4">
           <Button className="min-h-11 w-full justify-start gap-3" variant="secondary" onClick={() => downloadBackup(state)}>
-            <Download className="size-4" />导出数据
+            <Download className="size-4" />{t("profile.export")}
           </Button>
           <Button className="min-h-11 w-full justify-start gap-3" variant="outline" onClick={() => inputRef.current?.click()}>
-            <Upload className="size-4" />从 JSON 恢复
+            <Upload className="size-4" />{t("profile.restoreJson")}
           </Button>
-          <input ref={inputRef} accept="application/json,.json" aria-label="选择 JSON 备份文件" className="sr-only" type="file" onChange={handleFileChange} />
+          <input ref={inputRef} accept="application/json,.json" aria-label={t("profile.chooseBackup")} className="sr-only" type="file" onChange={handleFileChange} />
 
           {readError ? <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">{readError}</p> : null}
-          {preview && !preview.valid ? <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert"><p className="font-semibold">无法使用此备份</p><p className="mt-1">{preview.errors.join("；") || "备份格式不正确。"}</p></div> : null}
-          {imported ? <div className="rounded-2xl border bg-muted/45 p-3 text-sm"><div className="flex items-center gap-2 font-semibold"><FileJson className="size-4 text-primary" />备份预览</div><dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-muted-foreground"><dt>课程</dt><dd className="text-right text-foreground">{imported.courses.length} 项</dd><dt>Todo</dt><dd className="text-right text-foreground">{imported.todos.length} 项</dd><dt>学期</dt><dd className="truncate text-right text-foreground">{imported.semester.name}</dd><dt>备份版本</dt><dd className="text-right text-foreground">v{imported.schemaVersion}</dd></dl>{preview.warnings.length > 0 ? <p className="mt-3 text-xs text-muted-foreground">{preview.warnings.join("；")}</p> : null}<AlertDialog><AlertDialogTrigger asChild><Button className="mt-4 min-h-11 w-full">恢复此备份</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>确认恢复备份？</AlertDialogTitle><AlertDialogDescription>当前课程、Todo、学期、作息与设置将被此备份替换。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={handleRestore}>确认恢复</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div> : null}
+          {preview && !preview.valid ? <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert"><p className="font-semibold">{t("profile.invalidBackup")}</p><p className="mt-1">{preview.errors.join("；") || t("profile.invalidBackupFormat")}</p></div> : null}
+          {imported ? <div className="rounded-2xl border bg-muted/45 p-3 text-sm"><div className="flex items-center gap-2 font-semibold"><FileJson className="size-4 text-primary" />{t("profile.backupPreview")}</div><dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-muted-foreground"><dt>{t("profile.courses")}</dt><dd className="text-right text-foreground">{imported.courses.length} {t("profile.items")}</dd><dt>Todo</dt><dd className="text-right text-foreground">{imported.todos.length} {t("profile.items")}</dd><dt>{t("profile.semester")}</dt><dd className="truncate text-right text-foreground">{imported.semester.name}</dd><dt>{t("profile.backupVersion")}</dt><dd className="text-right text-foreground">v{imported.schemaVersion}</dd></dl>{preview.warnings.length > 0 ? <p className="mt-3 text-xs text-muted-foreground">{preview.warnings.join("；")}</p> : null}<AlertDialog><AlertDialogTrigger asChild><Button className="mt-4 min-h-11 w-full">{t("profile.restoreBackup")}</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("profile.restoreConfirm")}</AlertDialogTitle><AlertDialogDescription>{t("profile.restoreConfirmDescription")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel><AlertDialogAction onClick={handleRestore}>{t("profile.restoreConfirmAction")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div> : null}
 
-          <div className="border-t pt-3"><AlertDialog><AlertDialogTrigger asChild><Button className="min-h-11 w-full justify-start gap-3" variant="destructive"><Trash2 className="size-4" />清空全部数据</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清空全部应用数据？</AlertDialogTitle><AlertDialogDescription>课程、Todo、学期、作息与设置都会恢复为初始状态，且无法撤销。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={handleClearAll}>确认清空</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
+          <div className="border-t pt-3"><AlertDialog><AlertDialogTrigger asChild><Button className="min-h-11 w-full justify-start gap-3" variant="destructive"><Trash2 className="size-4" />{t("profile.clearAll")}</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("profile.clearConfirm")}</AlertDialogTitle><AlertDialogDescription>{t("profile.clearConfirmDescription")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={handleClearAll}>{t("profile.clearConfirmAction")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
         </div>
       </SheetContent>
     </Sheet>

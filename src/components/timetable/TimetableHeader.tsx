@@ -1,7 +1,9 @@
-import { CalendarDays, ChevronLeft, ChevronRight, FileUp, LocateFixed } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileUp, LocateFixed } from "lucide-react"
 
 import type { CohortYear } from "@/data/builtinTimetables"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/i18n/useI18n"
+import { formatTranslation } from "@/i18n/translate"
 
 interface TimetableHeaderProps {
   semesterName: string
@@ -13,12 +15,14 @@ interface TimetableHeaderProps {
   onNextWeek: () => void
   onPreviousWeek: () => void
   onImportExcel: () => void
-  currentWeekTarget: number
   onCohortChange: (cohortYear: CohortYear) => void
+  onWeekChange: (week: number) => void
+  currentWeekTarget: number
 }
 
-const iconButtonClassName =
-  "flex size-11 touch-manipulation items-center justify-center rounded-[15px] border bg-card text-foreground shadow-xs transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.97] active:bg-muted disabled:pointer-events-none disabled:opacity-35"
+function formatWeek(week: number): string {
+  return String(week).padStart(2, "0")
+}
 
 export function TimetableHeader({
   semesterName,
@@ -30,87 +34,42 @@ export function TimetableHeader({
   onNextWeek,
   onPreviousWeek,
   onImportExcel,
-  currentWeekTarget,
   onCohortChange,
+  onWeekChange,
+  currentWeekTarget,
 }: TimetableHeaderProps) {
-  return (
-    <section aria-labelledby="timetable-heading" className="px-3 pb-3 pt-4 sm:px-5 lg:px-6 lg:pb-4">
-      <div className="flex items-start justify-between gap-3 lg:items-center">
-        <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <div><h2 id="timetable-heading" className="flex items-center gap-1.5 text-base font-semibold tracking-tight"><CalendarDays className="size-4 text-primary" />晴空课表</h2><p className="mt-0.5 truncate text-[11px] text-muted-foreground">国际教育学院 · 中外合作办学 · {semesterName}</p></div>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:mt-1.5">
-            <p className="rounded-full bg-primary/12 px-2.5 py-1 text-sm font-semibold text-primary">第 {currentWeek} 周</p>
-            <p className="text-xs text-muted-foreground">{dateRange}</p>
-          </div>
-        </div>
+  const { t } = useI18n()
+  const weeks = Array.from({ length: totalWeeks }, (_, index) => index + 1)
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            aria-label="导入自定义课表"
-            className={iconButtonClassName}
-            onClick={onImportExcel}
-          >
-            <FileUp aria-hidden="true" className="size-4" />
-          </button>
-          <button
-            type="button"
-            className={cn(
-              "flex min-h-11 touch-manipulation items-center gap-1.5 rounded-[15px] bg-secondary px-3 text-xs font-semibold text-secondary-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
-            )}
-            disabled={currentWeek === currentWeekTarget}
-            onClick={onGoToCurrentWeek}
-          >
-            <LocateFixed aria-hidden="true" className="size-4" />
-            本周
-          </button>
-        </div>
+  return <section aria-labelledby="timetable-heading" className="timetable-header">
+    <div className="timetable-header-main">
+      <div className="min-w-0">
+        <p className="timetable-brand-kicker">{t("brand.name")}</p>
+        <h2 id="timetable-heading" className="timetable-semester-name">{semesterName}</h2>
+        <p className="timetable-brand-slogan">{t("brand.slogan")}</p>
       </div>
-
-      <div className="mt-3 lg:flex lg:items-center lg:justify-between lg:gap-4"><div><p className="mb-1.5 text-xs font-medium text-muted-foreground">查看课表</p><div className="inline-flex rounded-xl border bg-card p-1 shadow-xs" aria-label="查看课表年级">
-        {([2024, 2025] as const).map((year) => (
-          <button
-            key={year}
-            type="button"
-            aria-pressed={cohortYear === year}
-            className={cn(
-              "min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              cohortYear === year ? year === 2024 ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200" : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200" : "text-muted-foreground active:bg-muted",
-            )}
-            onClick={() => onCohortChange(year)}
-          >
-            {String(year).slice(2)}级
-          </button>
-        ))}
-      </div></div><p className="mt-3 hidden text-sm text-muted-foreground lg:block">共 {totalWeeks} 周 · 使用左右按钮切换教学周</p></div>
-
-      <div className="mt-3 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 lg:mt-4 lg:max-w-md">
-        <button
-          type="button"
-          aria-label="查看上一周"
-          className={iconButtonClassName}
-          disabled={currentWeek <= 1}
-          onClick={onPreviousWeek}
-        >
-          <ChevronLeft aria-hidden="true" className="size-5" />
-        </button>
-
-        <p className="text-center text-xs text-muted-foreground">
-          共 {totalWeeks} 周 · 左右切换教学周
-        </p>
-
-        <button
-          type="button"
-          aria-label="查看下一周"
-          className={iconButtonClassName}
-          disabled={currentWeek >= totalWeeks}
-          onClick={onNextWeek}
-        >
-          <ChevronRight aria-hidden="true" className="size-5" />
-        </button>
+      <div className="timetable-header-meta">
+        <div className="timetable-week-identity"><span className="timetable-week-number">{formatWeek(currentWeek)}</span><span className="timetable-week-label">WEEK</span></div>
+        <p className="timetable-date-range">{dateRange}</p>
       </div>
-    </section>
-  )
+    </div>
+
+    <div className="timetable-header-controls">
+      <div className="timetable-cohort-toggle" aria-label={t("timetable.viewCohort")}>
+        {([2024, 2025] as const).map((year) => <button aria-pressed={cohortYear === year} className={cn("timetable-cohort-option", cohortYear === year && "is-active")} key={year} onClick={() => onCohortChange(year)} type="button"><span>{String(year).slice(2)}</span><small>{t("profile.cohortSuffix")}</small></button>)}
+      </div>
+      <div className="timetable-utility-actions">
+        <button aria-label={t("timetable.importCustom")} className="timetable-utility-button" onClick={onImportExcel} type="button"><FileUp aria-hidden="true" className="size-4" /><span className="hidden sm:inline">{t("timetable.import")}</span></button>
+        <button className="timetable-utility-button" disabled={currentWeek === currentWeekTarget} onClick={onGoToCurrentWeek} type="button"><LocateFixed aria-hidden="true" className="size-4" />{t("timetable.currentWeek")}</button>
+      </div>
+    </div>
+
+    <div className="timetable-week-navigation" aria-label={t("timetable.weekNavigation")}>
+      <button aria-label={t("timetable.viewPreviousWeek")} className="timetable-week-arrow" disabled={currentWeek <= 1} onClick={onPreviousWeek} type="button"><ChevronLeft aria-hidden="true" className="size-4" /><span className="hidden md:inline">{t("timetable.previousWeek")}</span></button>
+      <div className="timetable-week-strip" role="list" aria-label={formatTranslation(t("timetable.totalWeeks"), { count: totalWeeks })}>
+        {weeks.map((week) => <button aria-current={week === currentWeek ? "step" : undefined} aria-label={formatTranslation(t("timetable.viewWeek"), { week })} className={cn("timetable-week-option", week === currentWeek && "is-active")} key={week} onClick={() => onWeekChange(week)} role="listitem" type="button">{formatWeek(week)}</button>)}
+      </div>
+      <button aria-label={t("timetable.viewNextWeek")} className="timetable-week-arrow" disabled={currentWeek >= totalWeeks} onClick={onNextWeek} type="button"><span className="hidden md:inline">{t("timetable.nextWeek")}</span><ChevronRight aria-hidden="true" className="size-4" /></button>
+    </div>
+  </section>
 }

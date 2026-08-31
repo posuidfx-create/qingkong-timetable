@@ -1,6 +1,8 @@
 import { format, isSameDay, isValid, parseISO } from "date-fns"
 
 import type { Todo } from "@/types/timetable"
+import type { AppLocale } from "@/i18n/locale"
+import { translate } from "@/i18n/translate"
 
 function parseTodoDate(value: string | undefined): Date | undefined {
   if (!value) return undefined
@@ -33,15 +35,22 @@ export function sortTodos(todos: readonly Todo[]): Todo[] {
     .map(({ todo }) => todo)
 }
 
-export function formatTodoDueDate(dueAt: string | undefined, now: Date): string | undefined {
+export function formatTodoDueDate(dueAt: string | undefined, now: Date, locale: AppLocale = "zh-CN"): string | undefined {
   const dueDate = parseTodoDate(dueAt)
   if (!dueDate) return undefined
 
-  if (isSameDay(dueDate, now)) return `今天 ${format(dueDate, "HH:mm")}`
+  if (isSameDay(dueDate, now)) return `${translate(locale, "date.today")} ${format(dueDate, "HH:mm")}`
   const tomorrow = new Date(now)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  if (isSameDay(dueDate, tomorrow)) return `明天 ${format(dueDate, "HH:mm")}`
-  return dueDate.getFullYear() === now.getFullYear()
-    ? format(dueDate, "M月d日 HH:mm")
-    : format(dueDate, "yyyy年M月d日 HH:mm")
+  if (isSameDay(dueDate, tomorrow)) return `${translate(locale, "date.tomorrow")} ${format(dueDate, "HH:mm")}`
+  if (locale === "zh-CN") {
+    return format(dueDate, dueDate.getFullYear() === now.getFullYear() ? "M月d日 HH:mm" : "yyyy年M月d日 HH:mm")
+  }
+  return new Intl.DateTimeFormat(locale, {
+    ...(dueDate.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(dueDate)
 }

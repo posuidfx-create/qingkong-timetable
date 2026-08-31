@@ -1,11 +1,29 @@
 import { APP_VERSION } from "@/constants/appVersion"
 
 export type ChangelogChangeType = "new" | "improved" | "fixed" | "security"
-export interface ChangelogEntry { version: string; title: string; description: string; isCurrent?: boolean; changes: Array<{ type: ChangelogChangeType; text: string }> }
+export interface ChangelogEntry { version: string; title: string; description: string; isCurrent?: boolean; major?: boolean; changes: Array<{ type: ChangelogChangeType; text: string; group?: string }> }
 const changes = (items: string[], type: ChangelogChangeType = "improved") => items.map((text) => ({ type, text }))
+const groupChanges = (group: string, items: string[], type: ChangelogChangeType = "improved") => items.map((text) => ({ type, text, group }))
 
 export const changelog: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "响应式与交互精修", description: "让晴空课表在手机、平板和电脑上都更加自然好用。", isCurrent: true, changes: [...changes(["管理员待办支持上传图片与学习资料附件", "待办附件支持预览图片与安全下载", "编辑管理员待办时可保留、添加或移除附件"], "new"), ...changes(["优化平板与桌面端响应式布局", "桌面端不再局限于手机宽度", "优化桌面课程表显示空间", "优化聊天桌面双栏布局", "精修聊天消息气泡、头像与消息间距", "优化聊天输入框和消息滚动体验", "优化私聊桌面会话体验", "优化 Todo 桌面布局与发布入口", "优化“我的”页面桌面布局", "统一移动端与桌面端导航体验", "优化自动登录后的认证状态同步", "优化手机端聊天室切换，补充公共、24级和25级入口"], "improved"), ...changes(["修复部分登录状态下管理员操作仍可能提示权限不足的问题", "修复移动端年级聊天室入口缺失的问题", "优化待办附件发布失败提示与清理流程"], "fixed")] },
+  { version: APP_VERSION, title: "学习记录稳定版", description: "学习记录与资料管理正式开放，并完善保存与清理体验。", isCurrent: true, changes: [
+    ...changes(["学习模块现已支持创建真实学习记录并上传图片、文档与音频资料", "支持仅添加附件的学习记录"], "new"),
+    ...changes(["完善学习资料删除与 Storage 清理流程"], "improved"),
+    ...changes(["修复学习资料图片预览在保存时偶尔失效的问题"], "fixed"),
+  ] },
+  { version: "3.0.0", title: "水系学习空间", description: "品牌、学习空间与日常校园工具迎来一次完整升级。", major: true, changes: [
+    ...groupChanges("全新品牌与学习空间", ["“晴空课表”正式升级为“努力也是一种天赋”", "新增学习中心，为今日记录、课程档案、单词本、学习成果与成长时间线建立入口", "全站重新定位为个人大学学习成长档案与数字学习空间"], "new"),
+    ...groupChanges("学习成长中心", ["新增学习中心基础入口", "新增课程档案基础整理与成长时间线"], "new"),
+    ...groupChanges("全新视觉系统", ["全站升级为 Aqua Liquid Glass 水系数字工作台", "课程表、学习、聊天、待办、我的、登录与注册统一视觉语言", "新增桌面工作台式布局、玻璃窗口层级和细腻交互反馈", "Water 01 升级为原创高清水面壁纸，Water 02、Mist、Deep Ocean 与 Night Water 保留原创 CSS 动态", "优化真实水面背景下的 Liquid Glass 透明度与层级", "优化动态水光播放与暂停控制", "移除存在版权风险的视频壁纸资源", "支持壁纸偏好保存，并优化手机、平板与宽屏桌面响应式体验"], "new"),
+    ...groupChanges("课程表", ["重构桌面课程表布局、周次导航与 24级 / 25级切换", "优化长课程名、课程层级和时间轴显示", "保留 Excel 导入、课程详情与课程管理能力"]),
+    ...groupChanges("聊天", ["新增移动端公共、24级与25级聊天室入口", "支持图片、文件、语音与视频消息", "支持附件预览、上传、下载，并优化私聊、群聊与响应式体验"], "new"),
+    ...groupChanges("待办", ["管理员待办支持图片与文档附件、多附件、编辑、预览和下载", "优化附件发布失败后的自动清理和权限行为"], "new"),
+    ...groupChanges("账户与体验", ["优化登录状态恢复与记住我体验", "优化 PWA 新版本发现和更新机制", "优化个人资料、角色、年级与用户列表体验"]),
+    ...groupChanges("语言与项目说明", ["完善日本語模式，全站固定界面支持中日双语切换", "新增关于本站，记录项目缘起、独立创作方式与长期维护说明", "关于本站增加作者联系方式与问题反馈入口", "补充 Cloudflare Pages 与 Supabase 运行服务说明，并明确非学校官方网站", "大版本首次提示加入 PWA 旧版本移除与重新添加说明"], "new"),
+    ...groupChanges("账号身份", ["新增“学生 / 老师”身份选择，学生可继续选择24级或25级", "老师账号可使用公共功能，并与学生年级权限保持独立", "用户列表增加老师分类"], "new"),
+    ...groupChanges("手机端精修", ["优化手机端中文与日文排版", "优化 About 长文本阅读体验", "调整顶部工具区与安全区表现", "优化长课程名称在小屏下的可读性"]),
+  ] },
+  { version: "2.3.1", title: "响应式与交互精修", description: "让努力也是一种天赋在手机、平板和电脑上都更加自然好用。", changes: [...changes(["优化平板与桌面端响应式布局", "优化桌面课程表、聊天、待办与个人页面空间", "统一移动端与桌面端导航体验", "优化手机端公共、24级与25级聊天室入口"]), ...changes(["修复部分登录状态下管理员操作仍可能提示权限不足的问题", "优化待办附件发布失败提示与清理流程"], "fixed")] },
   { version: "2.3.0", title: "校园视觉焕新", description: "让晴空课表从课程工具进一步成为属于国际教育学院同学的校园学习生活小助手。", changes: changes(["明确“晴空课表”校园小助手产品定位", "加入大连东软信息学院与国际教育学院（中外合作办学）信息", "全新优化登录与注册页面", "优化课程表页面视觉层级与 24级 / 25级切换体验", "聊天、私聊、同学列表、待办与“我的”页面焕新", "完善深色模式与移动端、桌面端响应式体验"]) },
   { version: "2.2.0", title: "管理与聊天升级", description: "聊天、管理和学院事务提醒变得更加完整。", changes: [...changes(["全面优化群聊消息气泡与私聊实时消息体验", "增加明显的私聊入口、最近会话和未读提醒", "增加管理员发布待办：全部同学、24级、25级与指定同学", "管理员待办完成状态按用户独立保存，保留原有个人本地待办"]), ...changes(["修复超级管理员权限管理并强化 Supabase RLS 权限安全"], "security")] },
   { version: "2.1.0", title: "同学交流上线", description: "从这一版开始，晴空课表不再只是一个人的课表。", changes: [...changes(["新增公共、24级、25级聊天室与用户私聊", "新增实时消息、Presence 在线状态、私聊未读状态和同学列表", "支持查看同学年级与角色，管理员可进入两个年级聊天室", "用户所属年级与课表查看年级正式分离"], "new"), ...changes(["加强聊天室与私聊数据库权限隔离"], "security")] },
@@ -15,4 +33,31 @@ export const changelog: readonly ChangelogEntry[] = [
   { version: "1.2.0", title: "学习助手", description: "除了看课表，也开始帮助同学管理学习安排。", changes: changes(["新增个人待办：创建、编辑、删除、完成与课程关联", "增加今日与逾期判断", "新增课程、周负载、待办与冲突统计", "新增学期、作息、周末、数据导出恢复设置"], "new") },
   { version: "1.1.0", title: "课表增强", description: "让真实学校课表能够更方便地进入晴空课表。", changes: changes(["新增真实 Excel 课表导入", "支持教师、教室、课程周数、单双周与不同周次课程", "新增课程冲突检测", "支持手动添加、编辑、删除课程与课程卡片优化"], "new") },
   { version: "1.0.0", title: "晴空启程", description: "晴空课表，从一张简单的课程表开始。", changes: changes(["建立基础周课程表与课程时间展示", "建立移动端基础界面", "建立暖白与低饱和粉彩视觉风格", "建立课程颜色体系与基础数据存储"], "new") },
+]
+
+export const changelogJa: readonly ChangelogEntry[] = [
+  { version: APP_VERSION, title: "学習記録 安定版", description: "学習記録と資料管理を正式公開し、保存と削除の安定性を改善しました。", isCurrent: true, changes: [
+    ...changes(["実際の学習記録を作成し、画像・文書・音声資料をアップロードできるようになりました", "添付ファイルだけの学習記録にも対応しました"], "new"),
+    ...changes(["学習資料の削除とStorageクリーンアップ処理を改善しました"], "improved"),
+    ...changes(["保存時に学習資料の画像プレビューがまれに表示されなくなる問題を修正しました"], "fixed"),
+  ] },
+  { version: "3.0.0", title: "水をテーマにした学習空間", description: "ブランド、学習空間、日々のキャンパスツールを一体的に刷新しました。", major: true, changes: [
+    ...groupChanges("ブランドと学習空間", ["ブランド名を「努力も才能のひとつ」へ刷新", "今日の記録・授業アーカイブ・単語帳・学習成果・成長タイムラインをまとめる学習センターを追加", "大学生活の学びを残す個人向けデジタル学習空間として再構成"], "new"),
+    ...groupChanges("学習記録", ["学習センターの基礎入口を追加", "授業アーカイブと成長タイムラインの基礎機能を追加"], "new"),
+    ...groupChanges("ビジュアルシステム", ["Aqua Liquid Glassを基調とした水のデジタルワークスペースへ刷新", "時間割・学習・チャット・ToDo・マイページ・認証画面の表現を統一", "オリジナルの水面壁紙と、端末幅に応じたレスポンシブ表示を改善"], "new"),
+    ...groupChanges("時間割", ["デスクトップ時間割、週ナビゲーション、24年・25年の切り替えを再設計", "長い授業名、時間軸、授業カードの読みやすさを改善", "Excel取込・授業詳細・授業管理機能を維持"]),
+    ...groupChanges("チャットとToDo", ["モバイルに公開・24年・25年チャットの入口を追加", "画像・ファイル・音声・動画メッセージに対応", "管理者ToDoで複数添付、プレビュー、ダウンロードに対応"], "new"),
+    ...groupChanges("言語とアカウント", ["日本語モードを完成し、固定UIを中国語と日本語に対応", "Aboutに制作背景、運用サービス、連絡先を掲載", "学生・教員のアカウント区分を追加し、学年権限から独立", "ユーザー一覧に教員フィルターを追加"], "new"),
+    ...groupChanges("モバイル調整", ["中国語と日本語の組版を最適化", "Aboutの長文とセーフエリアの表示を改善", "小画面で長い授業名を読みやすく調整"]),
+  ] },
+  { version: "2.3.1", title: "レスポンシブと操作性の調整", description: "スマートフォン、タブレット、PCで自然に使えるよう改善しました。", changes: changes(["タブレットとデスクトップのレイアウトを改善", "時間割・チャット・ToDo・マイページの余白を最適化", "モバイルの学年別チャット入口を改善"]) },
+  { version: "2.3.0", title: "キャンパスデザイン刷新", description: "時間割から、国際教育学院の学習生活を支えるツールへ進化しました。", changes: changes(["ログインと登録画面を刷新", "時間割と24年・25年切り替えを改善", "チャット、ユーザー一覧、ToDo、マイページを刷新", "ダークモードとレスポンシブ表示を改善"]) },
+  { version: "2.2.0", title: "管理とチャットの強化", description: "チャット、管理機能、学院からのToDoを拡充しました。", changes: [...changes(["グループ・個人チャットの体験を改善", "最近の会話と未読表示を追加", "管理者による対象別ToDo配信を追加"]), ...changes(["スーパー管理者の権限管理とRLSを強化"], "security")] },
+  { version: "2.1.0", title: "学生交流を追加", description: "個人の時間割から、学生同士がつながる場所へ広がりました。", changes: [...changes(["公開・24年・25年チャットと個人チャットを追加", "リアルタイムメッセージ、オンライン状態、未読表示、ユーザー一覧を追加"], "new"), ...changes(["チャットと個人メッセージの権限分離を強化"], "security")] },
+  { version: "2.0.0", title: "アカウント機能", description: "アカウントとユーザー管理の基盤を追加しました。", changes: [...changes(["Supabaseによる登録・ログイン・プロフィールを追加", "ユーザー・管理者・スーパー管理者の役割を追加", "既存のローカル時間割とToDoを維持"], "new"), ...changes(["Supabase RLSを導入"], "security")] },
+  { version: "1.4.0", title: "24年・25年の時間割", description: "両学年の授業をすぐ確認できるようにしました。", changes: changes(["国際教育学院の24年・25年時間割を内蔵", "学年切り替えと初回選択を追加", "切り替えても個人の授業を保持"], "new") },
+  { version: "1.3.0", title: "モバイル体験の強化", description: "スマートフォンにインストールできるキャンパスアプリへ進化しました。", changes: changes(["PWAとアプリアイコンに対応", "小画面、タブレット、デスクトップを最適化", "ダークモードとオフライン時間割を追加"]) },
+  { version: "1.2.0", title: "学習アシスタント", description: "時間割に加えて学習予定も管理できるようにしました。", changes: changes(["個人ToDoと授業との関連付けを追加", "今日・期限超過の判定を追加", "授業、負荷、ToDo、重複の統計を追加"], "new") },
+  { version: "1.1.0", title: "時間割の強化", description: "学校のExcel時間割を簡単に取り込めるようにしました。", changes: changes(["実際のExcel時間割取込を追加", "教員、教室、週範囲、隔週授業に対応", "授業重複の検出と手動編集を追加"], "new") },
+  { version: "1.0.0", title: "最初の一歩", description: "一枚の週間時間割から始まりました。", changes: changes(["週間時間割と授業時間を実装", "モバイル向け基本画面を構築", "低彩度のカラーパレットとローカル保存を導入"], "new") },
 ]

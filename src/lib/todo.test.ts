@@ -49,4 +49,10 @@ describe("Todo 时间与排序", () => {
     expect(formatTodoDueDate("2026-09-02T09:00:00+08:00", now)).toBe("明天 09:00")
     expect(formatTodoDueDate("2027-01-03T09:00:00+08:00", now)).toBe("2027年1月3日 09:00")
   })
+
+  it("formats Todo dates naturally in Japanese", () => {
+    expect(formatTodoDueDate("2026-09-01T18:00:00+08:00", now, "ja-JP")).toBe("今日 18:00")
+    expect(formatTodoDueDate("2026-09-02T09:00:00+08:00", now, "ja-JP")).toBe("明日 09:00")
+    expect(formatTodoDueDate("2027-01-03T09:00:00+08:00", now, "ja-JP")).toContain("2027")
+  })
 })

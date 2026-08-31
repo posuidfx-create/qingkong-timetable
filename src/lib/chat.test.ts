@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { appendUniqueMessage, canAccessChatRoom, countUnreadMessages, formatChatDateDivider, getAvailableRooms, getChatMessagePresentation, getMessageBubbleSide, getRoomDescription, getRoomLabel, isPrivateParticipant, parseChatMessage, shouldSendChatOnEnter, sortPrivateConversations, validateMessageContent } from "@/lib/chat"
 import type { Profile } from "@/types/auth"
 
-const base: Profile = { id: "u", username: "晴空", title: null, avatarUrl: null, role: "user", cohortYear: 2024, createdAt: "2026-01-01T00:00:00.000Z" }
+const base: Profile = { id: "u", username: "晴空", title: null, avatarUrl: null, role: "user", identityType: "student", cohortYear: 2024, createdAt: "2026-01-01T00:00:00.000Z" }
 
 describe("chat domain helpers", () => {
   it("grants rooms by profile cohort, not timetable selection", () => {
@@ -18,6 +18,11 @@ describe("chat domain helpers", () => {
   it("grants both cohort rooms to admins and super admins", () => {
     expect(getAvailableRooms({ ...base, role: "admin" })).toEqual(["public", "cohort_2024", "cohort_2025"])
     expect(getAvailableRooms({ ...base, role: "super_admin", cohortYear: null })).toEqual(["public", "cohort_2024", "cohort_2025"])
+  })
+  it("keeps ordinary teachers in public chat while teacher admins can access every room", () => {
+    expect(getAvailableRooms({ ...base, identityType: "teacher", cohortYear: null })).toEqual(["public"])
+    expect(getAvailableRooms({ ...base, identityType: "teacher", cohortYear: null, role: "admin" })).toEqual(["public", "cohort_2024", "cohort_2025"])
+    expect(getAvailableRooms({ ...base, identityType: "teacher", cohortYear: null, role: "super_admin" })).toEqual(["public", "cohort_2024", "cohort_2025"])
   })
   it("keeps unavailable cohort rooms locked while admins can select all three", () => {
     expect(canAccessChatRoom(getAvailableRooms(base), "cohort_2025")).toBe(false)
