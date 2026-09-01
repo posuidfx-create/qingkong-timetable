@@ -4,7 +4,7 @@ import { APP_BRAND_NAME, APP_BRAND_SHORT_NAME } from "@/constants/brand"
 import { getPrimaryPageFromPath } from "@/lib/appNavigation"
 import { getLearningViewFromPath } from "@/lib/learningNavigation"
 import { canUsePersonalLearning } from "@/lib/learningRecords"
-import { learningCards } from "@/lib/learning"
+import { learningIndexItems, learningMorphItems } from "@/lib/learningEditorial"
 import { primaryNavigationItems } from "@/lib/primaryNavigation"
 
 describe("learning center foundation", () => {
@@ -31,7 +31,11 @@ describe("learning center foundation", () => {
     expect(primaryNavigationItems.map((item) => item.label)).toEqual(["课程表", "学习", "聊天", "待办", "我的"])
   })
 
-  it("lists the learning center foundation cards", () => {
-    expect(learningCards.map((card) => card.title)).toEqual(["今日记录", "课程档案", "单词本", "学习成果", "成长时间线"])
+  it("lists the five editorial learning index entries", () => {
+    expect(learningIndexItems.map((item) => item.id)).toEqual(["today", "records", "archive", "words", "growth"])
+  })
+
+  it("uses real routes in the morph navigation", () => {
+    expect(learningMorphItems.map((item) => item.view)).toEqual(["today", "timeline", "archive"])
   })
 })

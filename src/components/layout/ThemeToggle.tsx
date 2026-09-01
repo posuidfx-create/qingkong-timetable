@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n/useI18n"
 
 const themeColors = {
   dark: "#1d211e",
-  light: "#f7f7f3",
+  light: "#f5f5f5",
 } as const
 
 function updateThemeColor(isDark: boolean) {

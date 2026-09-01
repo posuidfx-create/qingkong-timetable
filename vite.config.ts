@@ -16,10 +16,7 @@ export default defineConfig({
       registerType: "prompt",
       includeAssets: ["icon-192.svg", "icon-512.svg"],
       workbox: {
-        // Keep the lightweight static fallback available offline. The 31 MB
-        // video remains an on-demand resource instead of inflating app install.
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp}"],
-        globIgnores: ["wallpapers/water-01.png"],
       },
       manifest: {
         name: "努力也是一种天赋",
@@ -28,8 +25,8 @@ export default defineConfig({
         lang: "zh-CN",
         start_url: "/",
         display: "standalone",
-        theme_color: "#f7f7f3",
-        background_color: "#f7f7f3",
+        theme_color: "#f5f5f5",
+        background_color: "#f5f5f5",
         icons: [
           {
             src: "/icon-192.svg",

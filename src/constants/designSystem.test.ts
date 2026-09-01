@@ -4,14 +4,14 @@ import { DESIGN_TOKENS } from "@/constants/designSystem"
 import { getPrimaryPageFromPath, primaryPagePaths } from "@/lib/appNavigation"
 import { primaryNavigationItems } from "@/lib/primaryNavigation"
 
-describe("quiet luxury design system", () => {
-  it("keeps the neutral and sage palette stable", () => {
-    expect(DESIGN_TOKENS.colors).toMatchObject({ background: "#F7F7F3", sage: "#73866F", border: "#DADDD6" })
+describe("pixel editorial design system", () => {
+  it("keeps the pure gray canvas and carbon palette stable", () => {
+    expect(DESIGN_TOKENS.colors).toMatchObject({ background: "#F5F5F5", foreground: "#1D1D1F", border: "#D7D7D4", darkCanvas: "#171717" })
   })
 
   it("defines the intended spacing, radius, and motion rhythm", () => {
     expect(DESIGN_TOKENS.spacing).toEqual([4, 8, 12, 16, 24, 32, 48, 64, 96])
-    expect(DESIGN_TOKENS.radius).toEqual({ sm: 6, md: 10, lg: 16, xl: 20 })
+    expect(DESIGN_TOKENS.radius).toEqual({ sm: 4, md: 6, lg: 8, xl: 10 })
     expect(DESIGN_TOKENS.motion.normal).toBe(240)
   })
 

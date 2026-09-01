@@ -13,7 +13,6 @@ import { getConflictsForCourse, getCourseConflicts } from "@/lib/conflict"
 import { getCurrentSemesterWeek } from "@/lib/date"
 import { getCoursesForWeek } from "@/lib/timetable"
 import { getTodayTodos } from "@/lib/todo"
-import { updateGlassPointerOrigin } from "@/lib/glassPointer"
 import {
   clampWeekToSemester,
   formatSemesterWeekRange,
@@ -138,7 +137,7 @@ export function TimetablePage({ onOpenLearning, onOpenTodos }: TimetablePageProp
       <div className="timetable-workspace" data-focused-window={focusedWindow} onClick={(event) => {
         if (event.target === event.currentTarget) setFocusedWindow("main")
       }}>
-      <section className="workspace-window timetable-main-window" data-focused={focusedWindow === "main" || undefined} onClick={() => setFocusedWindow("main")} onPointerMove={(event) => updateGlassPointerOrigin(event.currentTarget, event.clientX, event.clientY)}>
+      <section className="workspace-window timetable-main-window" data-focused={focusedWindow === "main" || undefined} onClick={() => setFocusedWindow("main")}>
       <TimetableHeader
         currentWeek={currentWeek}
         currentWeekTarget={currentWeekTarget}

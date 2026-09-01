@@ -65,8 +65,13 @@ describe("i18n", () => {
     expect(jaJP["chat.rooms"]).toBe("チャットルーム")
     expect(jaJP["todo.title"]).toBe("ToDo")
     expect(jaJP["profile.title"]).toBe("マイページ")
-    expect(jaJP["wallpaper.title"]).toBe("壁紙")
+    expect(jaJP["theme.toLight"]).toBe("ライトモードに切り替え")
     expect(jaJP["common.save"]).toBe("保存")
+    expect(zhCN["pixelMotion.title"]).toBe("像素动效")
+    expect(jaJP["pixelMotion.title"]).toBe("ピクセルモーション")
+    expect(jaJP["pixelMotion.reducedMotion"]).toContain("停止")
+    expect(zhCN["pixelMotion.touchParticles"]).toBe("触摸粒子")
+    expect(jaJP["pixelMotion.touchParticles"]).toBe("タッチパーティクル")
   })
 
   it("provides complete bilingual Learning record controls", () => {

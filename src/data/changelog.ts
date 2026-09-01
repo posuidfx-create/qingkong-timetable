@@ -6,7 +6,13 @@ const changes = (items: string[], type: ChangelogChangeType = "improved") => ite
 const groupChanges = (group: string, items: string[], type: ChangelogChangeType = "improved") => items.map((text) => ({ type, text, group }))
 
 export const changelog: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "学习记录稳定版", description: "学习记录与资料管理正式开放，并完善保存与清理体验。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "像素编辑工作台", description: "以更克制的编辑式界面和轻量像素互动，重新整理日常学习空间。", isCurrent: true, changes: [
+    ...changes(["全站升级为更清晰、克制的 Pixel Editorial Workspace", "学习首页升级为编辑式学习档案，并新增今日摘要、学习索引与最近记录流"], "new"),
+    ...changes(["移除旧壁纸与水面背景体系，采用浅灰编辑式画布，让内容更集中", "优化桌面学习上下文与学习页面切换体验"], "improved"),
+    ...changes(["新增像素爱心环境动效与桌面鼠标像素互动", "新增移动端轻量触摸像素反馈"], "new"),
+    ...changes(["新增像素动效设置，可调整爱心数量、大小、速度、透明度及粒子效果", "桌面与移动端可独立设置背景爱心数量", "优化减少动态效果、动画性能与移动端动效体验"], "improved"),
+  ] },
+  { version: "3.0.1", title: "学习记录稳定版", description: "学习记录与资料管理正式开放，并完善保存与清理体验。", changes: [
     ...changes(["学习模块现已支持创建真实学习记录并上传图片、文档与音频资料", "支持仅添加附件的学习记录"], "new"),
     ...changes(["完善学习资料删除与 Storage 清理流程"], "improved"),
     ...changes(["修复学习资料图片预览在保存时偶尔失效的问题"], "fixed"),
@@ -36,7 +42,13 @@ export const changelog: readonly ChangelogEntry[] = [
 ]
 
 export const changelogJa: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "学習記録 安定版", description: "学習記録と資料管理を正式公開し、保存と削除の安定性を改善しました。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "ピクセル・エディトリアルワークスペース", description: "落ち着いた編集型UIと軽やかなピクセル表現で、日々の学習空間を整えました。", isCurrent: true, changes: [
+    ...changes(["全体をより明快で落ち着いたPixel Editorial Workspaceへ刷新しました", "学習ホームを編集型アーカイブへ刷新し、今日の概要・学習インデックス・最近の記録を追加しました"], "new"),
+    ...changes(["従来の壁紙と水面背景を廃止し、学習内容に集中しやすいライトグレーの編集型キャンバスへ変更しました", "デスクトップの学習コンテキストとページ切り替えを改善しました"], "improved"),
+    ...changes(["背景を漂うピクセルハートとデスクトップのマウス操作に反応するピクセル表現を追加しました", "モバイルに軽やかなタッチパーティクル反応を追加しました"], "new"),
+    ...changes(["ハートの数・サイズ・速度・透明度と粒子効果を調整できるピクセルモーション設定を追加しました", "デスクトップとモバイルで背景ハートの数を個別に設定できるようにしました", "視差効果を減らす設定、アニメーション性能、モバイル表示を改善しました"], "improved"),
+  ] },
+  { version: "3.0.1", title: "学習記録 安定版", description: "学習記録と資料管理を正式公開し、保存と削除の安定性を改善しました。", changes: [
     ...changes(["実際の学習記録を作成し、画像・文書・音声資料をアップロードできるようになりました", "添付ファイルだけの学習記録にも対応しました"], "new"),
     ...changes(["学習資料の削除とStorageクリーンアップ処理を改善しました"], "improved"),
     ...changes(["保存時に学習資料の画像プレビューがまれに表示されなくなる問題を修正しました"], "fixed"),

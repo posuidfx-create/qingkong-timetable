@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BarChart3, BookOpen, CalendarCog, Clock3, Database, History, Palette, RotateCcw, School, UserRound, UsersRound } from "lucide-react"
+import { BarChart3, BookOpen, CalendarCog, Clock3, Database, History, Palette, RotateCcw, School, Sparkles, UserRound, UsersRound } from "lucide-react"
 
 import { AccountSection } from "@/components/profile/AccountSection"
 import { CohortYearSheet } from "@/components/profile/CohortYearSheet"
@@ -27,6 +27,7 @@ import type { ThemePreference } from "@/types/timetable"
 import { APP_VERSION } from "@/constants/appVersion"
 import { LanguageMenu } from "@/components/layout/LanguageMenu"
 import { useI18n } from "@/i18n/useI18n"
+import { PixelMotionSettingsPanel } from "@/components/pixel/PixelMotionSettingsPanel"
 
 export function ProfilePage({ onOpenStatistics, onOpenChangelog, onOpenAbout }: { onOpenStatistics: () => void; onOpenChangelog: () => void; onOpenAbout: () => void }) {
   const { t } = useI18n()
@@ -44,6 +45,7 @@ export function ProfilePage({ onOpenStatistics, onOpenChangelog, onOpenAbout }: 
   const [timeOpen, setTimeOpen] = useState(false)
   const [dataOpen, setDataOpen] = useState(false)
   const [cohortOpen, setCohortOpen] = useState(false)
+  const [motionOpen, setMotionOpen] = useState(false)
   const profile = useAuthStore((state) => state.profile)
 
   const persistedState: PersistedAppState = {
@@ -68,6 +70,7 @@ export function ProfilePage({ onOpenStatistics, onOpenChangelog, onOpenAbout }: 
       <section className="rounded-[20px] border bg-card p-4 shadow-xs"><button type="button" className="flex min-h-11 w-full items-center justify-between gap-3 text-left" onClick={() => setCohortOpen(true)}><span className="flex shrink-0 items-center gap-2 text-sm font-semibold"><UsersRound className="size-4 text-primary" />{t("profile.identitySummary")}</span><span className="min-w-0 truncate text-xs text-muted-foreground">{profile?.identityType === "teacher" ? t("profile.teacher") : profile?.identityType === "student" && profile.cohortYear ? `${t("profile.student")} · ${t(profile.cohortYear === 2024 ? "profile.grade24" : "profile.grade25")}` : t("profile.chooseIdentity")} · {t("profile.changeIdentity")}</span></button></section>
 
       <section className="rounded-[20px] border bg-card p-4 shadow-xs"><h3 className="flex items-center gap-2 text-sm font-semibold"><Palette className="size-4 text-primary" />{t("profile.appearance")}</h3><Select value={settings.theme} onValueChange={(value) => updateSettings({ theme: value as ThemePreference })}><SelectTrigger aria-label={t("profile.theme")} className="mt-3 h-11 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="light">{t("theme.light")}</SelectItem><SelectItem value="dark">{t("theme.dark")}</SelectItem><SelectItem value="system">{t("theme.system")}</SelectItem></SelectContent></Select></section>
+      <section className="rounded-[20px] border bg-card p-4 shadow-xs md:hidden"><button type="button" className="flex min-h-11 w-full items-center justify-between gap-3 text-left" onClick={() => setMotionOpen(true)}><span className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-primary" />{t("pixelMotion.title")}</span><span className="text-xs text-muted-foreground">{t("pixelMotion.configure")}</span></button></section>
       <section className="rounded-[20px] border bg-card p-4 shadow-xs"><div className="flex min-h-11 items-center justify-between gap-3"><span className="text-sm font-semibold">{t("profile.language")}</span><LanguageMenu /></div></section>
       </div>
       <div className="space-y-4">
@@ -83,6 +86,7 @@ export function ProfilePage({ onOpenStatistics, onOpenChangelog, onOpenAbout }: 
       <Sheet open={timeOpen} onOpenChange={setTimeOpen}><SheetContent side="bottom" className="responsive-bottom-sheet max-h-[90dvh] rounded-t-3xl"><SheetHeader><SheetTitle>{t("profile.sectionTimes")}</SheetTitle><SheetDescription>{t("profile.sectionTimesDescription")}</SheetDescription></SheetHeader><div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4">{sectionTimes.map((item) => { const sectionLabel = t("profile.sectionLabel").replace("{section}", String(item.section)); return <div key={item.section} className="grid grid-cols-[3rem_1fr_1fr] items-center gap-2 rounded-xl bg-muted/50 p-2 text-sm"><b>{sectionLabel}</b><Input aria-label={`${sectionLabel} ${t("timetable.startSection")}`} type="time" value={item.startTime} onChange={(event) => updateSectionTime(item.section, { startTime: event.target.value })} /><Input aria-label={`${sectionLabel} ${t("timetable.endSection")}`} type="time" value={item.endTime} onChange={(event) => updateSectionTime(item.section, { endTime: event.target.value })} /></div>})}</div><div className="border-t p-4"><AlertDialog><AlertDialogTrigger asChild><button type="button" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-secondary text-sm font-semibold text-secondary-foreground"><RotateCcw className="size-4" />{t("profile.restoreDefaults")}</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("profile.restoreDefaultsTitle")}</AlertDialogTitle><AlertDialogDescription>{t("profile.restoreDefaultsDescription")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel><AlertDialogAction onClick={resetSectionTimes}>{t("profile.restoreDefaults")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></SheetContent></Sheet>
       <DataManagementSheet open={dataOpen} state={persistedState} onOpenChange={setDataOpen} onRestore={restoreAppData} onClearAll={clearAppData} />
       <CohortYearSheet open={cohortOpen} onOpenChange={setCohortOpen} />
+      <Sheet open={motionOpen} onOpenChange={setMotionOpen}><SheetContent side="bottom" className="responsive-bottom-sheet max-h-[90dvh] rounded-t-3xl"><SheetHeader><SheetTitle>{t("pixelMotion.title")}</SheetTitle><SheetDescription>{t("pixelMotion.description")}</SheetDescription></SheetHeader><div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"><PixelMotionSettingsPanel mode="mobile" /></div></SheetContent></Sheet>
     </section>
   )
 }
