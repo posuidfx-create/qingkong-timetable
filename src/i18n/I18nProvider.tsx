@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react"
 
 import { DEFAULT_LOCALE, readLocale, saveLocale, type AppLocale } from "@/i18n/locale"
 import { I18nContext, type I18nValue } from "@/i18n/I18nContext"
-import { translate } from "@/i18n/translate"
+import { formatTranslation, translate } from "@/i18n/translate"
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<AppLocale>(() => typeof window === "undefined" ? DEFAULT_LOCALE : readLocale(window.localStorage))
@@ -18,7 +18,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       setLocaleState(nextLocale)
       saveLocale(typeof window === "undefined" ? undefined : window.localStorage, nextLocale)
     },
-    t: (key) => translate(locale, key),
+    t: (key, values) => values ? formatTranslation(translate(locale, key), values) : translate(locale, key),
   }), [locale])
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>

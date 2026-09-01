@@ -15,7 +15,7 @@ import { supabase } from "@/lib/supabase"
 import type { LearningAsset, LearningAssetAnalysis, LearningAssetDraft, LearningAssetInsertRow, LearningRecord, LearningRecordDraft } from "@/types/learning"
 
 const signedUrlCache = new Map<string, { url: string; expiresAt: number }>()
-const recordColumns = "id, user_id, record_date, title, course_name, course_key, record_type, content, mood_note, created_at, updated_at"
+const recordColumns = "id, user_id, record_date, title, course_name, course_key, record_type, content, mood_note, processing_status, analysis_json, created_at, updated_at"
 const assetColumns = "id, record_id, user_id, asset_type, original_name, mime_type, file_size, storage_bucket, storage_path, sort_order, processing_status, extracted_text, analysis_json, created_at"
 
 export type LearningServiceErrorCode = "not_configured" | "auth_required" | "record_save_failed" | "asset_upload_failed" | "asset_save_failed" | "asset_delete_failed" | "record_delete_failed" | "record_load_failed"
@@ -53,8 +53,9 @@ export function parseLearningRecord(value: unknown, assets: readonly LearningAss
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   const title = optionalString(row.title); const courseName = optionalString(row.course_name); const courseKey = optionalString(row.course_key); const content = optionalString(row.content); const moodNote = optionalString(row.mood_note)
-  if (typeof row.id !== "string" || typeof row.user_id !== "string" || typeof row.record_date !== "string" || !isLearningRecordType(row.record_type) || title === undefined || courseName === undefined || courseKey === undefined || content === undefined || moodNote === undefined || typeof row.created_at !== "string" || typeof row.updated_at !== "string") return null
-  return { id: row.id, userId: row.user_id, recordDate: row.record_date, title, courseName, courseKey, type: row.record_type, content, moodNote, createdAt: row.created_at, updatedAt: row.updated_at, assets: assets.filter((asset) => asset.recordId === row.id).sort((left, right) => left.sortOrder - right.sortOrder) }
+  const analysis = row.analysis_json === undefined || row.analysis_json === null ? null : parseLearningAssetAnalysis(row.analysis_json)
+  if (typeof row.id !== "string" || typeof row.user_id !== "string" || typeof row.record_date !== "string" || !isLearningRecordType(row.record_type) || title === undefined || courseName === undefined || courseKey === undefined || content === undefined || moodNote === undefined || !isLearningProcessingStatus(row.processing_status) || (row.analysis_json !== undefined && row.analysis_json !== null && !analysis) || typeof row.created_at !== "string" || typeof row.updated_at !== "string") return null
+  return { id: row.id, userId: row.user_id, recordDate: row.record_date, title, courseName, courseKey, type: row.record_type, content, moodNote, processingStatus: row.processing_status, analysis, createdAt: row.created_at, updatedAt: row.updated_at, assets: assets.filter((asset) => asset.recordId === row.id).sort((left, right) => left.sortOrder - right.sortOrder) }
 }
 
 async function getAuthUserId(): Promise<string> {

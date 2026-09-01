@@ -15,7 +15,7 @@ export const learningIndexItems: readonly LearningIndexItem[] = [
   { id: "today", number: "01", titleKey: "learning.indexToday", descriptionKey: "learning.todayDescription", target: "today" },
   { id: "records", number: "02", titleKey: "learning.records", descriptionKey: "learning.recordsDescription", target: "timeline" },
   { id: "archive", number: "03", titleKey: "learning.courseArchive", descriptionKey: "learning.archiveDescription", target: "archive" },
-  { id: "words", number: "04", titleKey: "learning.words", descriptionKey: "learning.wordsDescription", target: null },
+  { id: "words", number: "04", titleKey: "learning.words", descriptionKey: "learning.wordsDescription", target: "words" },
   { id: "growth", number: "05", titleKey: "learning.growth", descriptionKey: "learning.timelineDescription", target: null },
 ] as const
 
@@ -27,6 +27,7 @@ export const learningMorphItems: ReadonlyArray<{
   { number: "01", titleKey: "learning.indexToday", view: "today" },
   { number: "02", titleKey: "learning.records", view: "timeline" },
   { number: "03", titleKey: "learning.courseArchive", view: "archive" },
+  { number: "04", titleKey: "learning.words", view: "words" },
 ]
 
 export interface LearningAssetCounts {

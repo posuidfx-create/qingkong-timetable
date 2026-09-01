@@ -1,8 +1,9 @@
-export type PrimaryPage = "timetable" | "learning" | "chat" | "todo" | "statistics" | "profile" | "changelog" | "about"
+export type PrimaryPage = "timetable" | "learning" | "vocabulary" | "chat" | "todo" | "statistics" | "profile" | "changelog" | "about"
 
 export const primaryPagePaths: Readonly<Record<PrimaryPage, string>> = {
   timetable: "/",
   learning: "/learning",
+  vocabulary: "/vocabulary",
   chat: "/chat",
   todo: "/todo",
   statistics: "/statistics",
@@ -12,6 +13,7 @@ export const primaryPagePaths: Readonly<Record<PrimaryPage, string>> = {
 }
 
 export function getPrimaryPageFromPath(pathname: string): PrimaryPage {
+  if (pathname === primaryPagePaths.vocabulary || pathname.startsWith(`${primaryPagePaths.vocabulary}/`)) return "vocabulary"
   if (pathname === primaryPagePaths.learning || pathname.startsWith(`${primaryPagePaths.learning}/`)) return "learning"
   return (Object.entries(primaryPagePaths).find(([, path]) => path === pathname)?.[0] as PrimaryPage | undefined) ?? "timetable"
 }

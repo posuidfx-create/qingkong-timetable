@@ -14,7 +14,7 @@ const imageAsset: LearningAsset = {
 function record(overrides: Partial<LearningRecord> = {}): LearningRecord {
   return {
     id: "record-a", userId: "user-a", recordDate: "2026-09-01", title: "课堂笔记", courseName: "综合日语", courseKey: null,
-    type: "class", content: "复习了第一课。", moodNote: null, createdAt: "2026-09-01T08:00:00Z", updatedAt: "2026-09-01T08:00:00Z", assets: [], ...overrides,
+    type: "class", content: "复习了第一课。", moodNote: null, processingStatus: "uploaded", analysis: null, createdAt: "2026-09-01T08:00:00Z", updatedAt: "2026-09-01T08:00:00Z", assets: [], ...overrides,
   }
 }
 

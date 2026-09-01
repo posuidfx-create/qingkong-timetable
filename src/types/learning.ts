@@ -44,6 +44,8 @@ export interface LearningRecord {
   type: LearningRecordType
   content: string | null
   moodNote: string | null
+  processingStatus: LearningProcessingStatus
+  analysis: LearningAssetAnalysis | null
   createdAt: string
   updatedAt: string
   assets: LearningAsset[]

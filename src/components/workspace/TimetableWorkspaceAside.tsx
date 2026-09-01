@@ -7,6 +7,7 @@ interface TimetableWorkspaceAsideProps {
   focusedWindow?: "main" | "today" | "learning" | "todo" | "ai"
   onFocus: (window: "today" | "learning" | "todo" | "ai") => void
   onOpenLearning?: () => void
+  onOpenVocabulary?: () => void
   onOpenTodos?: () => void
   todayTodoCount: number
 }
@@ -20,7 +21,7 @@ function getTodayLabel(now: Date, locale: AppLocale): { date: string; day: strin
   }
 }
 
-export function TimetableWorkspaceAside({ focusedWindow, onFocus, onOpenLearning, onOpenTodos, todayTodoCount }: TimetableWorkspaceAsideProps) {
+export function TimetableWorkspaceAside({ focusedWindow, onFocus, onOpenLearning, onOpenVocabulary, onOpenTodos, todayTodoCount }: TimetableWorkspaceAsideProps) {
   const { locale, t } = useI18n()
   const today = getTodayLabel(new Date(), locale)
 
@@ -35,7 +36,7 @@ export function TimetableWorkspaceAside({ focusedWindow, onFocus, onOpenLearning
       <div className="flex items-start justify-between gap-3"><div><p className="workspace-window-kicker">LEARNING</p><h3 className="mt-1 text-base font-medium">{t("learning.title")}</h3></div><BookOpen aria-hidden="true" className="size-4 text-primary" /></div>
       <button className="workspace-learning-index mt-4" onClick={(event) => { event.stopPropagation(); onOpenLearning?.() }} type="button"><span>01</span>{t("learning.today")} <i aria-hidden="true">→</i></button>
       <button className="workspace-learning-index" onClick={(event) => { event.stopPropagation(); onOpenLearning?.() }} type="button"><span>02</span>{t("learning.archive")} <i aria-hidden="true">→</i></button>
-      <button className="workspace-learning-index" onClick={(event) => { event.stopPropagation(); onOpenLearning?.() }} type="button"><span>03</span>{t("learning.words")} <i aria-hidden="true">→</i></button>
+      <button className="workspace-learning-index" onClick={(event) => { event.stopPropagation(); onOpenVocabulary?.() }} type="button"><span>03</span>{t("learning.words")} <i aria-hidden="true">→</i></button>
     </section>
 
     <section className="workspace-window workspace-todo-window" data-focused={focusedWindow === "todo" || undefined} onClick={() => onFocus("todo")}>

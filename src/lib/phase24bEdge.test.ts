@@ -3,17 +3,26 @@ import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 const edgeSource = readFileSync(new URL("../../supabase/functions/analyze-learning-record/index.ts", import.meta.url), "utf8")
-const filesSource = readFileSync(new URL("../../supabase/functions/analyze-learning-record/geminiFiles.ts", import.meta.url), "utf8")
+const providerSource = readFileSync(new URL("../../supabase/functions/analyze-learning-record/deepseek.ts", import.meta.url), "utf8")
 
-describe("Phase 24B Edge Function security contract", () => {
-  it("keeps Gemini credentials server-only and verifies the bearer user", () => {
-    expect(edgeSource).toContain('Deno.env.get("GEMINI_API_KEY")')
-    expect(edgeSource).not.toContain("VITE_GEMINI")
+describe("DeepSeek Edge Function security contract", () => {
+  it("reads DeepSeek credentials only in the Edge Function and verifies the bearer user", () => {
+    expect(edgeSource).toContain('Deno.env.get("DEEPSEEK_API_KEY")')
+    expect(edgeSource).toContain('Deno.env.get("DEEPSEEK_MODEL")')
+    expect(edgeSource).not.toMatch(/GEMINI|Gemini|gemini/)
+    expect(providerSource).not.toContain("Deno.env")
+    expect(edgeSource).not.toContain("VITE_DEEPSEEK")
     expect(edgeSource).toContain("bearerToken(request)")
     expect(edgeSource).toContain("admin.auth.getUser(token)")
     expect(edgeSource).toContain("record.user_id !== userData.user.id")
-    expect(edgeSource).toContain('Deno.env.get("GEMINI_MODEL") ?? "gemini-3.5-flash"')
     expect(edgeSource).not.toContain("body.model")
+  })
+
+  it("uses the official OpenAI-compatible endpoint and JSON output", () => {
+    expect(providerSource).toContain('https://api.deepseek.com/chat/completions')
+    expect(providerSource).toContain('DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-flash"')
+    expect(providerSource).toContain('response_format: { type: "json_object" }')
+    expect(providerSource).toContain('Authorization: `Bearer ${apiKey}`')
   })
 
   it("answers browser preflight with the headers required by supabase.functions.invoke", () => {
@@ -22,39 +31,18 @@ describe("Phase 24B Edge Function security contract", () => {
     for (const header of ["authorization", "x-client-info", "apikey", "content-type"]) expect(edgeSource).toContain(header)
   })
 
-  it("resolves private Storage metadata on the server and never accepts paths from the request", () => {
+  it("loads private records server-side and does not send attachments to the text model", () => {
     expect(edgeSource).toContain('admin.from("learning_assets")')
-    expect(edgeSource).toContain("admin.storage.from(asset.storage_bucket).download(asset.storage_path)")
+    expect(edgeSource).not.toContain("admin.storage")
+    expect(edgeSource).toContain('status: "unsupported"')
     expect(edgeSource).not.toContain("createPublicUrl")
     expect(edgeSource).not.toContain("createSignedUrl")
   })
 
-  it("writes only the existing service-managed AI columns through the server client", () => {
+  it("persists the stable record analysis_json through service-managed columns", () => {
+    expect(edgeSource).toContain("analysis_json: normalized.analysis")
     expect(edgeSource).toContain('processing_status: "processing"')
     expect(edgeSource).toContain('processing_status: "completed"')
     expect(edgeSource).toContain('processing_status: "failed"')
-    expect(edgeSource).toContain("extracted_text: normalized.extractedText")
-    expect(edgeSource).toContain("analysis_json: normalized.analysis")
-  })
-
-  it("does not delete original attachments when analysis fails", () => {
-    expect(edgeSource).not.toContain(".remove(")
-    expect(edgeSource).not.toContain(".delete().eq(\"id\", asset.id)")
-  })
-
-  it("uses Gemini Files API for large payloads and always attempts temporary-file cleanup", () => {
-    expect(edgeSource).toContain("chooseGeminiAttachmentTransfer(bytes.byteLength)")
-    expect(edgeSource).toContain("uploadGeminiFile(")
-    expect(edgeSource).toContain("deleteGeminiFile(")
-    expect(edgeSource).toContain("withGeminiUploadedFile({")
-    expect(filesSource).toContain("finally")
-    expect(filesSource).toContain("await operations.cleanup(uploaded)")
-  })
-
-  it("recovers each supported asset independently and attempts to clear permanent processing state", () => {
-    expect(edgeSource).toContain("runIndependentAssetJobs(supportedAssets")
-    expect(edgeSource).toContain('processing_status: "failed"')
-    expect(edgeSource).toContain('status: "unsupported"')
-    expect(edgeSource).toContain('finalCode = failedUpdateError ? "database_write_failed" : code')
   })
 })

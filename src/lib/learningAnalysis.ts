@@ -1,14 +1,15 @@
 import { LEARNING_AI_ENABLED } from "@/constants/features"
+import { isLearningAssetAiSupported } from "@/lib/learningAiSupport"
 import { fetchLearningRecordById } from "@/lib/learningService"
 import { supabase } from "@/lib/supabase"
 import type { LearningAsset, LearningRecord } from "@/types/learning"
 
 export const LEARNING_ANALYSIS_FUNCTION_NAME = "analyze-learning-record"
 
-const supportedImageMimes = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"])
+export { isLearningAssetAiSupported } from "@/lib/learningAiSupport"
 
 export type LearningAnalysisAction = "analyze" | "processing" | "rerun" | null
-export type LearningAnalysisErrorCode = "not_configured" | "auth_required" | "record_not_found" | "forbidden" | "gemini_not_configured" | "gemini_auth_failed" | "gemini_quota" | "gemini_timeout" | "invalid_ai_response" | "network_failed" | "analysis_failed"
+export type LearningAnalysisErrorCode = "not_configured" | "auth_required" | "record_not_found" | "forbidden" | "deepseek_not_configured" | "deepseek_auth_failed" | "deepseek_quota" | "deepseek_timeout" | "invalid_ai_response" | "network_failed" | "analysis_failed"
 
 export interface LearningAnalysisAssetResult {
   assetId: string
@@ -28,24 +29,27 @@ export class LearningAnalysisError extends Error {
   constructor(public readonly code: LearningAnalysisErrorCode, public readonly cause?: unknown) { super(code) }
 }
 
-function normalizedMime(asset: Pick<LearningAsset, "mimeType">): string {
-  return asset.mimeType.toLowerCase().split(";")[0]?.trim() ?? ""
+function hasRecordText(record: Pick<LearningRecord, "title" | "courseName" | "content" | "moodNote">): boolean {
+  return [record.title, record.courseName, record.content, record.moodNote].some((value) => Boolean(value?.trim()))
 }
 
-export function isLearningAssetAiSupported(asset: Pick<LearningAsset, "type" | "mimeType">): boolean {
-  const mime = normalizedMime(asset)
-  return asset.type === "image" ? supportedImageMimes.has(mime) : asset.type === "document" && mime === "application/pdf"
+type LearningAnalysisSubject = readonly LearningAsset[] | Pick<LearningRecord, "title" | "courseName" | "content" | "moodNote" | "processingStatus" | "assets">
+
+function isAssetList(subject: LearningAnalysisSubject): subject is readonly LearningAsset[] {
+  return Array.isArray(subject)
 }
 
-export function getLearningAnalysisAction(assets: readonly LearningAsset[], running = false): LearningAnalysisAction {
+export function getLearningAnalysisAction(subject: LearningAnalysisSubject, running = false): LearningAnalysisAction {
+  const assets = isAssetList(subject) ? subject : subject.assets
   const supported = assets.filter(isLearningAssetAiSupported)
-  if (!supported.length) return null
-  if (running || supported.some((asset) => asset.processingStatus === "processing")) return "processing"
-  return supported.some((asset) => asset.processingStatus === "completed" || asset.processingStatus === "failed") ? "rerun" : "analyze"
+  const supportsText = !isAssetList(subject) && hasRecordText(subject)
+  if (!supported.length && !supportsText) return null
+  if (running || (!isAssetList(subject) && subject.processingStatus === "processing") || supported.some((asset) => asset.processingStatus === "processing")) return "processing"
+  return (!isAssetList(subject) && ["completed", "failed"].includes(subject.processingStatus)) || supported.some((asset) => asset.processingStatus === "completed" || asset.processingStatus === "failed") ? "rerun" : "analyze"
 }
 
 export function markLearningAssetsProcessing(record: LearningRecord): LearningRecord {
-  return { ...record, assets: record.assets.map((asset) => isLearningAssetAiSupported(asset) ? { ...asset, processingStatus: "processing" as const } : asset) }
+  return { ...record, processingStatus: hasRecordText(record) ? "processing" : record.processingStatus, assets: record.assets.map((asset) => isLearningAssetAiSupported(asset) ? { ...asset, processingStatus: "processing" as const } : asset) }
 }
 
 export function buildLearningAnalysisRequest(recordId: string): { recordId: string } {
@@ -56,10 +60,10 @@ export function mapLearningAnalysisError(status: number | null, serverCode?: str
   if (status === 401 || serverCode === "auth_required") return "auth_required"
   if (status === 403 || serverCode === "forbidden") return "forbidden"
   if (status === 404 || serverCode === "record_not_found") return "record_not_found"
-  if (serverCode === "gemini_not_configured" || serverCode === "backend_not_configured") return "gemini_not_configured"
-  if (serverCode === "gemini_auth_failed") return "gemini_auth_failed"
-  if (serverCode === "gemini_quota") return "gemini_quota"
-  if (serverCode === "gemini_timeout") return "gemini_timeout"
+  if (serverCode === "deepseek_not_configured" || serverCode === "backend_not_configured") return "deepseek_not_configured"
+  if (serverCode === "deepseek_auth_failed") return "deepseek_auth_failed"
+  if (serverCode === "deepseek_quota") return "deepseek_quota"
+  if (serverCode === "deepseek_timeout") return "deepseek_timeout"
   if (serverCode === "invalid_ai_response") return "invalid_ai_response"
   if (status === null) return "network_failed"
   return "analysis_failed"

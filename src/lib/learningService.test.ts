@@ -24,7 +24,7 @@ describe("learning service flow", () => {
   it("parses snake_case rows and keeps assets attached to their record", () => {
     const asset = parseLearningAsset({ id: "a", record_id: "r", user_id: "u", asset_type: "image", original_name: "x.png", mime_type: "image/png", file_size: 1, storage_bucket: "learning-materials-images", storage_path: "learning/u/r/a.png", sort_order: 0, processing_status: "uploaded", created_at: "2026-09-01" })
     expect(asset).not.toBeNull()
-    expect(parseLearningRecord({ id: "r", user_id: "u", record_date: "2026-09-01", title: null, course_name: null, course_key: null, record_type: "daily", content: "note", mood_note: null, created_at: "2026-09-01", updated_at: "2026-09-01" }, asset ? [asset] : [])?.assets).toHaveLength(1)
+    expect(parseLearningRecord({ id: "r", user_id: "u", record_date: "2026-09-01", title: null, course_name: null, course_key: null, record_type: "daily", content: "note", mood_note: null, processing_status: "uploaded", analysis_json: null, created_at: "2026-09-01", updated_at: "2026-09-01" }, asset ? [asset] : [])?.assets).toHaveLength(1)
   })
   it("parses only the stable versioned learning analysis schema", () => {
     expect(parseLearningAssetAnalysis({ version: 1, summary: "摘要", keyPoints: ["重点"], contentType: "笔记", language: "中文", suggestedReview: "复习", warnings: [] })).toMatchObject({ version: 1, summary: "摘要" })

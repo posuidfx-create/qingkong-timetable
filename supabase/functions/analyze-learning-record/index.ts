@@ -1,27 +1,25 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
 
 import {
-  assertAnalyzableAssetSize,
-  buildLearningAnalysisPrompt,
-  chooseGeminiAttachmentTransfer,
-  getLearningAssetAnalysisKind,
-  learningAnalysisResponseSchema,
-  normalizeGeminiAnalysisResponse,
-  runIndependentAssetJobs,
-  selectAnalyzableAssets,
+  hasAnalyzableRecordText,
   type LearningAnalysisAssetData,
   type LearningAnalysisRecordData,
+  type NormalizedLearningAnalysis,
 } from "./analysis.ts"
-import { deleteGeminiFile, GeminiFileApiError, uploadGeminiFile, withGeminiUploadedFile } from "./geminiFiles.ts"
+import { DEFAULT_DEEPSEEK_MODEL, DeepSeekApiError, requestDeepSeekAnalysis } from "./deepseek.ts"
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" }
 const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" }
-const recordColumns = "id, user_id, record_date, title, course_name, content, mood_note"
+const recordColumns = "id, user_id, record_date, title, course_name, content, mood_note, processing_status, analysis_json"
 const assetColumns = "id, record_id, user_id, asset_type, original_name, mime_type, file_size, storage_bucket, storage_path"
 
-type AnalysisErrorCode = "storage_not_found" | "file_too_large" | "unsupported_file" | "gemini_auth_failed" | "gemini_quota" | "gemini_timeout" | "invalid_ai_response" | "gemini_failed" | "database_write_failed"
-
-interface AssetResult { assetId: string; status: "completed" | "failed" | "unsupported"; errorCode?: AnalysisErrorCode }
+type AnalysisErrorCode = "unsupported_file" | "deepseek_auth_failed" | "deepseek_quota" | "deepseek_timeout" | "invalid_ai_response" | "deepseek_failed"
+interface AssetResult { assetId: string; status: "unsupported" }
+interface RecordAnalysisResult {
+  status: "completed" | "failed" | "unsupported"
+  analysis_json?: NormalizedLearningAnalysis["analysis"]
+  errorCode?: AnalysisErrorCode
+}
 
 function response(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders })
@@ -32,71 +30,19 @@ function bearerToken(request: Request): string | null {
   return header.startsWith("Bearer ") ? header.slice(7).trim() || null : null
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = ""
-  const chunkSize = 0x8000
-  for (let offset = 0; offset < bytes.length; offset += chunkSize) binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize))
-  return btoa(binary)
-}
-
-function mapGeminiStatus(status: number): AnalysisErrorCode {
-  if (status === 401 || status === 403) return "gemini_auth_failed"
-  if (status === 429) return "gemini_quota"
-  return "gemini_failed"
+function mapDeepSeekStatus(status: number): AnalysisErrorCode {
+  if (status === 401 || status === 403) return "deepseek_auth_failed"
+  if (status === 429) return "deepseek_quota"
+  return "deepseek_failed"
 }
 
 function errorCode(reason: unknown): AnalysisErrorCode {
-  if (reason instanceof GeminiFileApiError) return reason.status === null ? "gemini_failed" : mapGeminiStatus(reason.status)
+  if (reason instanceof DeepSeekApiError) return reason.status === null ? "deepseek_failed" : mapDeepSeekStatus(reason.status)
   if (reason instanceof Error) {
-    if (reason.name === "AbortError") return "gemini_timeout"
-    if (["storage_not_found", "file_too_large", "unsupported_file", "gemini_auth_failed", "gemini_quota", "gemini_timeout", "invalid_ai_response", "gemini_failed", "database_write_failed"].includes(reason.message)) return reason.message as AnalysisErrorCode
+    if (reason.name === "AbortError") return "deepseek_timeout"
+    if (["deepseek_auth_failed", "deepseek_quota", "deepseek_timeout", "invalid_ai_response", "deepseek_failed"].includes(reason.message)) return reason.message as AnalysisErrorCode
   }
-  return "gemini_failed"
-}
-
-type GeminiMediaInput = { type: "image" | "document"; data: string; mime_type: string } | { type: "image" | "document"; uri: string; mime_type: string }
-
-async function requestGeminiInteraction(apiKey: string, model: string, record: LearningAnalysisRecordData, asset: LearningAnalysisAssetData, media: GeminiMediaInput): Promise<ReturnType<typeof normalizeGeminiAnalysisResponse>> {
-  const kind = getLearningAssetAnalysisKind(asset)
-  if (!kind) throw new Error("unsupported_file")
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 60_000)
-  try {
-    const geminiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        model,
-        input: [
-          { type: "text", text: buildLearningAnalysisPrompt(record, asset) },
-          media,
-        ],
-        response_format: { type: "text", mime_type: "application/json", schema: learningAnalysisResponseSchema },
-      }),
-    })
-    if (!geminiResponse.ok) throw new Error(mapGeminiStatus(geminiResponse.status))
-    const payload: unknown = await geminiResponse.json()
-    const outputText = payload && typeof payload === "object" && "output_text" in payload ? (payload as { output_text?: unknown }).output_text : null
-    return normalizeGeminiAnalysisResponse(outputText)
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
-async function requestGemini(apiKey: string, model: string, record: LearningAnalysisRecordData, asset: LearningAnalysisAssetData, bytes: Uint8Array): Promise<ReturnType<typeof normalizeGeminiAnalysisResponse>> {
-  const kind = getLearningAssetAnalysisKind(asset)
-  if (!kind) throw new Error("unsupported_file")
-  const type = kind === "image" ? "image" : "document"
-  const mimeType = asset.mime_type.toLowerCase().split(";")[0]?.trim() ?? ""
-  if (chooseGeminiAttachmentTransfer(bytes.byteLength) === "inline") return requestGeminiInteraction(apiKey, model, record, asset, { type, data: bytesToBase64(bytes), mime_type: mimeType })
-
-  return withGeminiUploadedFile({
-    upload: () => uploadGeminiFile(apiKey, asset.original_name, mimeType, bytes),
-    use: (file) => requestGeminiInteraction(apiKey, model, record, asset, { type, uri: file.uri, mime_type: file.mimeType }),
-    cleanup: (file) => deleteGeminiFile(apiKey, file),
-    onCleanupError: () => console.warn("[learning analysis] Gemini temporary file cleanup failed"),
-  })
+  return "deepseek_failed"
 }
 
 Deno.serve(async (request: Request) => {
@@ -107,10 +53,10 @@ Deno.serve(async (request: Request) => {
   if (!token) return response(401, { code: "auth_required" })
   const supabaseUrl = Deno.env.get("SUPABASE_URL")
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY")
-  const geminiKey = Deno.env.get("GEMINI_API_KEY")
-  const geminiModel = Deno.env.get("GEMINI_MODEL") ?? "gemini-3.5-flash"
+  const deepSeekKey = Deno.env.get("DEEPSEEK_API_KEY")
+  const deepSeekModel = Deno.env.get("DEEPSEEK_MODEL") ?? DEFAULT_DEEPSEEK_MODEL
   if (!supabaseUrl || !serviceKey) return response(503, { code: "backend_not_configured" })
-  if (!geminiKey) return response(503, { code: "gemini_not_configured" })
+  if (!deepSeekKey) return response(503, { code: "deepseek_not_configured" })
 
   let body: unknown
   try { body = await request.json() }
@@ -130,34 +76,35 @@ Deno.serve(async (request: Request) => {
   const { data: assetRows, error: assetError } = await admin.from("learning_assets").select(assetColumns).eq("record_id", recordId).order("sort_order")
   if (assetError) return response(500, { code: "asset_load_failed" })
   const assets = (assetRows ?? []) as LearningAnalysisAssetData[]
-  const supportedAssets = selectAnalyzableAssets(assets)
-  const supportedIds = new Set(supportedAssets.map((asset) => asset.id))
-  const results: AssetResult[] = assets.filter((asset) => !supportedIds.has(asset.id)).map((asset) => ({ assetId: asset.id, status: "unsupported" }))
+  const results: AssetResult[] = assets.map((asset) => ({ assetId: asset.id, status: "unsupported" }))
+  const recordData = record as LearningAnalysisRecordData
 
-  results.push(...await runIndependentAssetJobs(supportedAssets, async (asset): Promise<AssetResult> => {
-      const { error: processingError } = await admin.from("learning_assets").update({ processing_status: "processing", extracted_text: null, analysis_json: null }).eq("id", asset.id).eq("record_id", recordId).eq("user_id", userData.user.id)
-      if (processingError) throw new Error("database_write_failed")
-      assertAnalyzableAssetSize(asset)
-      const { data: file, error: downloadError } = await admin.storage.from(asset.storage_bucket).download(asset.storage_path)
-      if (downloadError || !file) throw new Error("storage_not_found")
-      if (file.size !== asset.file_size) throw new Error("storage_not_found")
-      const normalized = await requestGemini(geminiKey, geminiModel, record as LearningAnalysisRecordData, asset, new Uint8Array(await file.arrayBuffer()))
-      const { error: updateError } = await admin.from("learning_assets").update({ processing_status: "completed", extracted_text: normalized.extractedText || null, analysis_json: normalized.analysis }).eq("id", asset.id).eq("record_id", recordId).eq("user_id", userData.user.id)
-      if (updateError) throw new Error("database_write_failed")
-      return { assetId: asset.id, status: "completed" }
-    }, async (asset, reason): Promise<AssetResult> => {
+  let recordAnalysis: RecordAnalysisResult
+  if (!hasAnalyzableRecordText(recordData)) {
+    recordAnalysis = { status: "unsupported", errorCode: "unsupported_file" }
+  } else {
+    try {
+      const { error: processingError } = await admin.from("learning_records").update({ processing_status: "processing", analysis_json: null }).eq("id", recordId).eq("user_id", userData.user.id)
+      if (processingError) return response(500, { code: "database_write_failed" })
+      const normalized = await requestDeepSeekAnalysis(deepSeekKey, deepSeekModel, recordData)
+      const { error: completedError } = await admin.from("learning_records").update({ processing_status: "completed", analysis_json: normalized.analysis }).eq("id", recordId).eq("user_id", userData.user.id)
+      if (completedError) throw new Error("database_write_failed")
+      recordAnalysis = { status: "completed", analysis_json: normalized.analysis }
+    } catch (reason) {
       const code = errorCode(reason)
-      const { error: failedUpdateError } = await admin.from("learning_assets").update({ processing_status: "failed", extracted_text: null, analysis_json: null }).eq("id", asset.id).eq("record_id", recordId).eq("user_id", userData.user.id)
-      const finalCode = failedUpdateError ? "database_write_failed" : code
-      console.error("[learning analysis] asset failed", { assetId: asset.id, code: finalCode })
-      return { assetId: asset.id, status: "failed", errorCode: finalCode }
-    }))
+      const { error: failedError } = await admin.from("learning_records").update({ processing_status: "failed", analysis_json: null }).eq("id", recordId).eq("user_id", userData.user.id)
+      console.error("[learning analysis] record failed", { recordId, code })
+      recordAnalysis = { status: "failed", errorCode: failedError ? "deepseek_failed" : code }
+    }
+  }
 
   return response(200, {
     recordId,
+    model: deepSeekModel,
+    recordAnalysis,
     results,
-    completed: results.filter((item) => item.status === "completed").length,
-    failed: results.filter((item) => item.status === "failed").length,
-    unsupported: results.filter((item) => item.status === "unsupported").length,
+    completed: recordAnalysis.status === "completed" ? 1 : 0,
+    failed: recordAnalysis.status === "failed" ? 1 : 0,
+    unsupported: results.length + (recordAnalysis.status === "unsupported" ? 1 : 0),
   })
 })

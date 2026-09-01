@@ -66,7 +66,7 @@ describe("learning records", () => {
     expect(row).not.toHaveProperty("processing_status")
   })
   it("aggregates course archives and sorts the timeline", () => {
-    const base = { userId: "u", title: null, courseKey: null, type: "class" as const, content: null, moodNote: null, updatedAt: "2026-09-01", assets: [] }
+    const base = { userId: "u", title: null, courseKey: null, type: "class" as const, content: null, moodNote: null, processingStatus: "uploaded" as const, analysis: null, updatedAt: "2026-09-01", assets: [] }
     const records = [
       { ...base, id: "2", recordDate: "2026-08-31", courseName: "日语", createdAt: "2026-08-31" },
       { ...base, id: "1", recordDate: "2026-09-01", courseName: "日语", createdAt: "2026-09-01" },

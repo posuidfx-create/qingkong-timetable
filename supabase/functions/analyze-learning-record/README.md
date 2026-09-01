@@ -1,19 +1,19 @@
 # analyze-learning-record
 
-Authenticated Supabase Edge Function for user-triggered analysis of private learning-record images and PDFs.
+Server-only DeepSeek analysis for the signed-in user's private learning record text.
 
 Required Edge Function secret:
 
 ```text
-GEMINI_API_KEY
+DEEPSEEK_API_KEY
 ```
 
-Optional secret:
+Optional server-side model override:
 
 ```text
-GEMINI_MODEL=gemini-3.5-flash
+DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
-Keep JWT verification enabled (the Supabase default). The browser invokes the function with only `{ "recordId": "..." }`; user ownership, Storage paths, and AI result fields are resolved and written on the server. Never expose the Gemini key as a `VITE_` variable.
+Keep JWT verification enabled. The browser sends only `{ "recordId": "..." }`; the function verifies the bearer user and record ownership before calling DeepSeek's official OpenAI-compatible Chat Completions API. Never expose the DeepSeek key as a `VITE_` variable.
 
-Attachments up to 10 MiB are sent inline. Larger supported images and PDFs use the Gemini Files API so base64 expansion cannot push the interaction request past the multimodal payload budget. Files API objects are deleted in a `finally` cleanup after either success or failure; Gemini's automatic expiration remains the fallback if that cleanup request fails.
+This provider currently analyzes record text only. Attachments remain private, unchanged, and reported as unsupported; image, PDF, Office, and audio processing are intentionally not sent to the text model.

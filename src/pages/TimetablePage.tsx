@@ -45,10 +45,11 @@ function getFormKey(mode: "create" | "edit", courseId?: string): string {
 
 interface TimetablePageProps {
   onOpenLearning?: () => void
+  onOpenVocabulary?: () => void
   onOpenTodos?: () => void
 }
 
-export function TimetablePage({ onOpenLearning, onOpenTodos }: TimetablePageProps) {
+export function TimetablePage({ onOpenLearning, onOpenVocabulary, onOpenTodos }: TimetablePageProps) {
   const { locale, t } = useI18n()
   const courses = useTimetableStore((state) => state.courses)
   const todos = useTimetableStore((state) => state.todos)
@@ -174,7 +175,7 @@ export function TimetablePage({ onOpenLearning, onOpenTodos }: TimetablePageProp
         sectionTimes={sectionTimes}
       />
       </section>
-      <TimetableWorkspaceAside focusedWindow={focusedWindow} onFocus={setFocusedWindow} onOpenLearning={onOpenLearning} onOpenTodos={onOpenTodos} todayTodoCount={todayTodoCount} />
+      <TimetableWorkspaceAside focusedWindow={focusedWindow} onFocus={setFocusedWindow} onOpenLearning={onOpenLearning} onOpenVocabulary={onOpenVocabulary} onOpenTodos={onOpenTodos} todayTodoCount={todayTodoCount} />
       </div>
 
       <input

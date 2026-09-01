@@ -17,7 +17,9 @@ import { StatisticsPage } from "@/pages/StatisticsPage"
 import { TimetablePage } from "@/pages/TimetablePage"
 import { ChangelogPage } from "@/pages/ChangelogPage"
 import { LearningPage } from "@/pages/LearningPage"
+import { VocabularyPage } from "@/pages/VocabularyPage"
 import { AboutPage } from "@/pages/AboutPage"
+import { LearningModuleNavigation } from "@/components/learning/LearningModuleNavigation"
 import { getPrimaryPageFromPath, primaryPagePaths } from "@/lib/appNavigation"
 import { useI18n } from "@/i18n/useI18n"
 const ChatPage = lazy(() => import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage })))
@@ -39,7 +41,10 @@ export default function App() {
   const handlePageChange = useCallback((page: PrimaryPage) => {
     setActivePage(page)
     const path = primaryPagePaths[page]
-    if (window.location.pathname !== path) window.history.pushState(null, "", path)
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path)
+      window.dispatchEvent(new PopStateEvent("popstate"))
+    }
   }, [])
   useEffect(() => {
     const handlePopState = () => setActivePage(getPrimaryPageFromPath(window.location.pathname))
@@ -60,9 +65,11 @@ export default function App() {
 
   const content =
     activePage === "timetable" ? (
-      <TimetablePage onOpenLearning={() => handlePageChange("learning")} onOpenTodos={() => handlePageChange("todo")} />
+      <TimetablePage onOpenLearning={() => handlePageChange("learning")} onOpenVocabulary={() => handlePageChange("vocabulary")} onOpenTodos={() => handlePageChange("todo")} />
     ) : activePage === "learning" ? (
-      <LearningPage />
+      <><LearningModuleNavigation active="library" onOpenLibrary={() => handlePageChange("learning")} onOpenVocabulary={() => handlePageChange("vocabulary")} /><LearningPage /></>
+    ) : activePage === "vocabulary" ? (
+      <><LearningModuleNavigation active="vocabulary" onOpenLibrary={() => handlePageChange("learning")} onOpenVocabulary={() => handlePageChange("vocabulary")} /><VocabularyPage onOpenLearning={() => handlePageChange("learning")} /></>
     ) : activePage === "chat" ? (
       <Suspense fallback={<p className="text-sm text-muted-foreground">{t("auth.openingChat")}</p>}><ChatPage onlineUsers={onlineUsers} onUnreadHandled={handleUnreadHandled} /></Suspense>
     ) : activePage === "todo" ? (

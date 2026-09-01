@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Info } from "lucide-react"
+import { Info, Languages } from "lucide-react"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { LanguageMenu } from "@/components/layout/LanguageMenu"
@@ -34,9 +34,10 @@ function NavigationBadge({ count }: { count: number }) {
 export function AppShell({ activePage, children, onPageChange, unreadChatCount = 0, todoBadgeCount = 0 }: AppShellProps) {
   const profile = useAuthStore((state) => state.profile)
   const { locale, t } = useI18n()
-  const pageTitle: Record<PrimaryPage, string> = { timetable: t("nav.timetable"), learning: t("nav.learning"), chat: t("nav.chat"), todo: t("nav.todo"), statistics: t("nav.statistics"), profile: t("nav.profile"), changelog: t("nav.changelog"), about: t("nav.about") }
+  const pageTitle: Record<PrimaryPage, string> = { timetable: t("nav.timetable"), learning: t("nav.learning"), vocabulary: t("learning.words"), chat: t("nav.chat"), todo: t("nav.todo"), statistics: t("nav.statistics"), profile: t("nav.profile"), changelog: t("nav.changelog"), about: t("nav.about") }
   const getBadgeCount = (id: NavigationItem["id"]) => id === "chat" ? unreadChatCount : id === "todo" ? todoBadgeCount : 0
   const debugProbeActive = isPixelDebugMode(window.location.search, import.meta.env.DEV)
+  const openVocabulary = () => onPageChange("vocabulary")
 
   return <div className="app-viewport">
     {!debugProbeActive && <><PixelHeartDrift /><PointerPixelField /><TouchPixelResponse /></>}
@@ -46,7 +47,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
         <nav className="workspace-rail-nav" aria-label={t("nav.primary")}>
           {primaryNavigationItems.map((item) => {
             const Icon = item.icon
-            const isActive = activePage === item.id
+            const isActive = activePage === item.id || (activePage === "vocabulary" && item.id === "learning")
             const badgeCount = getBadgeCount(item.id)
             return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className="workspace-rail-item" data-active={isActive} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-5" strokeWidth={isActive ? 2 : 1.55} /><NavigationBadge count={badgeCount} /></span><span>{t(item.labelKey)}</span></button>
           })}
@@ -65,6 +66,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
         <div className="hidden min-w-0 flex-1 items-center justify-center md:flex"><p className="truncate text-xs font-medium tracking-[0.08em] text-muted-foreground">{pageTitle[activePage]}</p></div>
         <div className="app-shell-utility ml-auto">
           {profile ? <div className="workspace-user hidden items-center gap-2 lg:flex"><div className="min-w-0 text-right"><p className="truncate text-xs font-medium">{profile.username}</p><CohortBadge year={profile.cohortYear} className="mt-0.5 inline-flex" /></div><UserAvatar id={profile.id} name={profile.username} className="size-8 rounded-full text-xs" /></div> : null}
+          {activePage === "learning" ? <button aria-label={t("learning.words")} className="workspace-utility-button" onClick={openVocabulary} type="button"><Languages aria-hidden="true" className="size-[18px]" /></button> : null}
           <LanguageMenu compact />
           <button aria-label={t("utility.about")} className="workspace-utility-button" onClick={() => onPageChange("about")} type="button"><Info aria-hidden="true" className="size-[18px]" /></button>
           <PixelMotionMenu />
@@ -77,7 +79,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
       <nav aria-label={t("nav.primary")} className="app-bottom-nav sticky bottom-0 z-30 grid grid-cols-5 gap-1 border-t bg-background px-2 pt-2 md:hidden">
         {primaryNavigationItems.map((item) => {
           const Icon = item.icon
-          const isActive = activePage === item.id
+          const isActive = activePage === item.id || (activePage === "vocabulary" && item.id === "learning")
           const badgeCount = getBadgeCount(item.id)
           return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className={cn("app-mobile-nav-item flex min-h-12 min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium active:scale-[0.98]", isActive ? "text-primary" : "text-muted-foreground active:text-foreground")} data-active={isActive} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-[19px]" strokeWidth={isActive ? 2 : 1.55} /><NavigationBadge count={badgeCount} /></span><span className="max-w-full truncate">{t(item.labelKey)}</span></button>
         })}
