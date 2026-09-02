@@ -74,14 +74,30 @@ export interface ExtractedVocabularyWord {
   partOfSpeech: string
   meanings: string[]
   sourceText: string
+  tileIndex: number
+  rowOrder: number
   confidence: number
   warnings: string[]
+  needsReview: boolean
+  recognitionStatus: "clear" | "review" | "unconfirmed"
+}
+
+export interface VocabularyStageDiagnostics {
+  visionRawCount: number
+  afterTileMergeCount: number
+  afterValidationCount: number
+  finalReviewCount: number
+  tileCandidateCounts: number[]
 }
 
 export interface VocabularyImageExtraction {
   version: 1
   words: ExtractedVocabularyWord[]
   warnings: string[]
+  tileCount: number
+  possibleCoverageGap: boolean
+  coverageGapTileIndexes: number[]
+  stageDiagnostics: VocabularyStageDiagnostics
 }
 
 export interface GrammarExample {

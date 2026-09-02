@@ -57,10 +57,13 @@ function parseWord(value: unknown): EditableImportedWord | null {
     || typeof row.reading !== "string" || row.reading.length > 160
     || typeof row.partOfSpeech !== "string" || row.partOfSpeech.length > 80
     || typeof row.sourceText !== "string" || row.sourceText.length > 500
+    || typeof row.tileIndex !== "number" || !Number.isInteger(row.tileIndex) || row.tileIndex < 0 || row.tileIndex > 5
+    || typeof row.rowOrder !== "number" || !Number.isInteger(row.rowOrder) || row.rowOrder < 0
     || typeof row.confidence !== "number" || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1
+    || typeof row.needsReview !== "boolean" || !["clear", "review", "unconfirmed"].includes(String(row.recognitionStatus))
     || typeof row.selected !== "boolean" || !meanings || !warnings
   ) return null
-  return { id: row.id, term: row.term, reading: row.reading, partOfSpeech: row.partOfSpeech, meanings, sourceText: row.sourceText, confidence: row.confidence, warnings, selected: row.selected }
+  return { id: row.id, term: row.term, reading: row.reading, partOfSpeech: row.partOfSpeech, meanings, sourceText: row.sourceText, tileIndex: row.tileIndex, rowOrder: row.rowOrder, confidence: row.confidence, warnings, needsReview: row.needsReview, recognitionStatus: row.recognitionStatus as EditableImportedWord["recognitionStatus"], selected: row.selected }
 }
 
 function parseDraft(value: unknown, context: VocabularyImageReviewContext): VocabularyImageReviewDraft | null {

@@ -1,4 +1,5 @@
 import { getAuthErrorMessage } from "@/lib/auth"
+import { executeVocabularyBulkDelete, type VocabularyBulkDeleteResult } from "@/lib/vocabularyBulkDelete"
 import { buildVocabularyInsertRow, parseVocabularyWord } from "@/lib/vocabulary"
 import { supabase } from "@/lib/supabase"
 import type { VocabularyWord, VocabularyWordDraft } from "@/types/vocabulary"
@@ -64,6 +65,16 @@ export async function deleteVocabularyWord(word: VocabularyWord): Promise<void> 
   if (word.userId !== userId) throw new VocabularyServiceError("delete_failed")
   const { error } = await requireSupabase().from("vocabulary_words").delete().eq("id", word.id)
   if (error) throw new VocabularyServiceError("delete_failed", error)
+}
+
+export async function deleteVocabularyWords(ids: readonly string[]): Promise<VocabularyBulkDeleteResult> {
+  await currentUserId()
+  const client = requireSupabase()
+  return executeVocabularyBulkDelete(ids, async (chunk) => {
+    const { data, error } = await client.from("vocabulary_words").delete().in("id", [...chunk]).select("id")
+    if (error) throw new VocabularyServiceError("delete_failed", error)
+    return (data ?? []).flatMap((row) => typeof row.id === "string" ? [row.id] : [])
+  })
 }
 
 export function getVocabularyServiceErrorMessage(error: unknown): VocabularyServiceErrorCode | string {

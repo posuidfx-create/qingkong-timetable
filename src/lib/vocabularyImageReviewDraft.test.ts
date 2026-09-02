@@ -27,8 +27,12 @@ const word = (patch: Partial<EditableImportedWord> = {}): EditableImportedWord =
   partOfSpeech: "名词",
   meanings: ["计划"],
   sourceText: "予定",
+  tileIndex: 0,
+  rowOrder: 0,
   confidence: 0.94,
   warnings: [],
+  needsReview: false,
+  recognitionStatus: "clear",
   selected: true,
   ...patch,
 })
@@ -82,6 +86,12 @@ describe("vocabulary image Review session draft", () => {
     const storage = new MemoryStorage()
     saveVocabularyImageReviewDraft(context(), [word({ term: "心配します", reading: "しんぱいします", meanings: ["担心"], selected: false })], { storage })
     expect(loadVocabularyImageReviewDraft(context(), { storage })).toMatchObject({ words: [{ term: "心配します", reading: "しんぱいします", meanings: ["担心"], selected: false }] })
+  })
+
+  it("restores tile provenance, source text and review status", () => {
+    const storage = new MemoryStorage()
+    saveVocabularyImageReviewDraft(context(), [word({ sourceText: "心配します", tileIndex: 2, rowOrder: 7, needsReview: true, recognitionStatus: "review", selected: false })], { storage })
+    expect(loadVocabularyImageReviewDraft(context(), { storage })?.words[0]).toMatchObject({ sourceText: "心配します", tileIndex: 2, rowOrder: 7, needsReview: true, recognitionStatus: "review", selected: false })
   })
 
   it("isolates drafts by lesson and signed-in user", () => {

@@ -8,6 +8,8 @@ describe("Phase 25 vocabulary SQL security", () => {
     expect(sql).toContain("alter table public.vocabulary_words enable row level security")
     expect((sql.match(/user_id = auth\.uid\(\)/g) ?? []).length).toBeGreaterThanOrEqual(4)
     expect(sql).not.toContain("is_admin_or_super")
+    expect(sql).toContain('create policy "Users delete own vocabulary"')
+    expect(sql).toMatch(/for delete\s+to authenticated\s+using \(user_id = auth\.uid\(\)\)/s)
   })
 
   it("prevents authenticated clients from spoofing cached AI output", () => {

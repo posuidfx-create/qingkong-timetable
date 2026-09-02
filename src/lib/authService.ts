@@ -2,6 +2,7 @@ import { getAuthErrorMessage } from "@/lib/auth"
 import { setAuthPersistence } from "@/lib/authPersistence"
 import { normalizeProfileIdentity } from "@/lib/profileIdentity"
 import { supabase } from "@/lib/supabase"
+import { clearAllVocabularyImportBatches } from "@/lib/vocabularyImportBatch"
 import { clearAllVocabularyImageReviewDrafts } from "@/lib/vocabularyImageReviewDraft"
 import type { ProfileCohortYear, ProfileIdentityType } from "@/types/auth"
 
@@ -41,6 +42,7 @@ export async function signUpWithPassword(
 export async function signOut(): Promise<AuthActionResult> {
   const { error } = await requireSupabase().auth.signOut()
   if (error) return { error: getAuthErrorMessage(error.message) }
+  clearAllVocabularyImportBatches()
   clearAllVocabularyImageReviewDrafts()
   return {}
 }

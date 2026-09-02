@@ -6,7 +6,11 @@ const changes = (items: string[], type: ChangelogChangeType = "improved") => ite
 const groupChanges = (group: string, items: string[], type: ChangelogChangeType = "improved") => items.map((text) => ({ type, text, group }))
 
 export const changelog: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "图片学习", description: "让课程分享、聊天图片与个人学习资料真正可看、可整理，也能从教材照片提取本课单词。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "图片识词准确率优化", description: "提高日语图片识词准确率与导入可控性，优先忠实呈现图片中真正可见的内容。", isCurrent: true, changes: [
+    ...changes(["图片识词改为 3–6 个高清分区自动识别小字，并对相邻重叠区域确定性去重", "识别结果新增原文依据，以及可靠、需要补充、需要确认状态", "支持裁剪单词区域后识别，并可撤销本次新导入的词", "单词本新增批量选择与批量删除"], "new"),
+    ...changes(["提升日语图片识词准确率，减少小字漏识别与图片外词汇", "缺失的读音与释义保持未识别，不再根据教材上下文自动补全", "图片识词 Review 刷新后可恢复，并保留编辑与选择状态", "支持按当前搜索和课次结果全选", "批量删除前增加安全确认，删除后实时更新课次和列表", "增强批量操作的移动端体验"], "improved"),
+  ] },
+  { version: "3.3.0", title: "图片学习", description: "让课程分享、聊天图片与个人学习资料真正可看、可整理，也能从教材照片提取本课单词。", changes: [
     ...changes(["分享内容与聊天现可直接预览图片", "Learning 支持 DeepSeek 图片理解，可从课堂照片和截图整理学习笔记", "大家的日语课次支持从图片识别单词", "识别结果可确认、编辑并一键加入当前课"], "new"),
     ...changes(["优化图片权限、预览失败重试与移动端查看体验", "图片识词会跳过已有单词，并保留失败项供用户重试", "图片识词 Review 可在刷新后恢复，并保留编辑与选择状态"], "improved"),
   ] },
@@ -54,7 +58,11 @@ export const changelog: readonly ChangelogEntry[] = [
 ]
 
 export const changelogJa: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "画像で学ぶ", description: "授業共有やチャットの画像をその場で確認し、学習画像の整理や教材写真からの単語取り込みに対応しました。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "画像単語認識の精度改善", description: "日本語画像からの単語認識精度と取り込み操作を改善し、画像に実際に見える内容を優先します。", isCurrent: true, changes: [
+    ...changes(["画像を3〜6個の高精細な領域に自動分割して小さい文字を読み取り、重なった結果を確定的に整理します", "読み取り原文と、信頼できる・補足が必要・要確認の状態を表示します", "単語部分を切り抜いて認識し、今回新規追加した単語だけを取り消せます", "単語帳に一括選択と一括削除を追加しました"], "new"),
+    ...changes(["日本語の画像認識精度を高め、小さい文字の読み落としと画像外の語の生成を抑えました", "画像に見えない読み方や意味は未認識のまま保持し、教材知識から補完しません", "画像認識のReviewは再読み込み後も復元され、編集内容と選択状態を保持します", "現在の検索結果や課に表示されている単語だけをまとめて選択できます", "一括削除前に安全確認を行い、削除後は課の件数と単語一覧をすぐ更新します", "モバイルの一括操作を改善しました"], "improved"),
+  ] },
+  { version: "3.3.0", title: "画像で学ぶ", description: "授業共有やチャットの画像をその場で確認し、学習画像の整理や教材写真からの単語取り込みに対応しました。", changes: [
     ...changes(["共有内容とチャットの画像を直接プレビューできるようになりました", "LearningでDeepSeekの画像理解に対応し、授業写真やスクリーンショットから学習ノートを整理できます", "『みんなの日本語』の各課で画像から単語を読み取れるようになりました", "読み取り結果を確認・編集して、現在の課へまとめて追加できます"], "new"),
     ...changes(["画像権限、プレビューの再読み込み、モバイル表示を改善しました", "画像からの単語追加では登録済みの語を除外し、失敗した項目を再試行できます", "画像単語のReviewは再読み込み後も復元され、編集内容と選択状態を保持します"], "improved"),
   ] },

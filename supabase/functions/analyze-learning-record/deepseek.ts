@@ -63,6 +63,11 @@ export interface DeepSeekVisionJsonResult {
   diagnostics: DeepSeekRequestDiagnostics
 }
 
+export interface DeepSeekVisionImage {
+  mimeType: string
+  bytes: Uint8Array
+}
+
 export async function requestDeepSeekJson(
   apiKey: string,
   model: string,
@@ -189,6 +194,19 @@ export async function requestDeepSeekVisionJsonResult(
   fetcher: DeepSeekFetch = fetch,
   options: DeepSeekVisionRequestOptions = {},
 ): Promise<DeepSeekVisionJsonResult> {
+  return requestDeepSeekMultiVisionJsonResult(apiKey, model, prompt, [{ mimeType, bytes }], maxTokens, fetcher, options)
+}
+
+export async function requestDeepSeekMultiVisionJsonResult(
+  apiKey: string,
+  model: string,
+  prompt: string,
+  images: readonly DeepSeekVisionImage[],
+  maxTokens = 2_048,
+  fetcher: DeepSeekFetch = fetch,
+  options: DeepSeekVisionRequestOptions = {},
+): Promise<DeepSeekVisionJsonResult> {
+  if (!images.length) throw new Error("vision_images_required")
   const controller = new AbortController()
   const startedAt = Date.now()
   const timeout = setTimeout(() => controller.abort(), 90_000)
@@ -198,7 +216,7 @@ export async function requestDeepSeekVisionJsonResult(
       { role: "system", content: "You are a careful visual learning assistant. Return valid JSON only and never guess illegible text." },
       { role: "user", content: [
         { type: "text", text: prompt },
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${bytesToBase64(bytes)}`, detail: "original" } },
+        ...images.map((image) => ({ type: "image_url", image_url: { url: `data:${image.mimeType};base64,${bytesToBase64(image.bytes)}`, detail: "original" } })),
       ] },
     ],
     response_format: { type: "json_object" },

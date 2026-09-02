@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 const workspace = readFileSync(new URL("../components/learning/VocabularyWorkspace.tsx", import.meta.url), "utf8")
 const detail = readFileSync(new URL("../components/learning/VocabularyWordDetailSheet.tsx", import.meta.url), "utf8")
 const styles = readFileSync(new URL("../index.css", import.meta.url), "utf8")
+const service = readFileSync(new URL("vocabularyService.ts", import.meta.url), "utf8")
+const lessonWorkspace = readFileSync(new URL("../components/learning/JapaneseLessonWorkspace.tsx", import.meta.url), "utf8")
 
 describe("Vocabulary Workspace interaction contract", () => {
   it("makes every word independently playable and detail-accessible", () => {
@@ -36,5 +38,41 @@ describe("Vocabulary Workspace interaction contract", () => {
     expect(workspace).toContain('event.key === " "')
     expect(workspace).toContain('event.key === "Escape"')
     expect(workspace).toContain("target instanceof HTMLInputElement")
+  })
+
+  it("supports explicit selection mode and a destructive confirmation", () => {
+    expect(workspace).toContain("enterSelectionMode")
+    expect(workspace).toContain("toggleVocabularySelection")
+    expect(workspace).toContain("selectAllVisibleVocabularyWords(visibleWords.map")
+    expect(workspace).toContain("bulkDeleteDescription")
+    expect(workspace).toContain("setBulkConfirmOpen(true)")
+    expect(workspace).toContain("confirmBulkDelete")
+  })
+
+  it("keeps failed ids selected while removing successful ids immediately", () => {
+    expect(workspace).toContain("setSelectedIds(new Set(result.failedIds))")
+    expect(workspace).toContain("items.filter((item) => !deleted.has(item.id))")
+    expect(workspace).toContain("retryFailed")
+    expect(workspace).toContain("onWordsDeleted?.(result.deletedIds)")
+  })
+
+  it("updates lesson counts without touching grammar or AI paths", () => {
+    expect(lessonWorkspace).toContain("onWordsDeleted={(ids) => setWords")
+    expect(lessonWorkspace).toContain("wordFilter={lessonWordFilter}")
+    expect(workspace).toContain("analyzeVocabularyWord")
+    expect(workspace).not.toContain("deleteGrammar")
+  })
+
+  it("submits only selected ids through a batched delete mapping", () => {
+    expect(workspace).toContain("deleteVocabularyWords([...selectedIds])")
+    expect(service).toContain('.from("vocabulary_words").delete().in("id", [...chunk]).select("id")')
+    expect(service).not.toMatch(/deleteVocabularyWords[\s\S]*?\.eq\("user_id"/)
+  })
+
+  it("keeps mobile rows readable and the action bar above the safe area", () => {
+    expect(styles).toContain('.vocabulary-row[data-selection="true"]')
+    expect(styles).toContain("vocabulary-selection-bar")
+    expect(styles).toContain("bottom:calc(5.25rem + env(safe-area-inset-bottom))")
+    expect(styles).toContain("-webkit-line-clamp:2")
   })
 })

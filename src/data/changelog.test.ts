@@ -64,7 +64,7 @@ describe("changelog", () => {
 
   it("keeps versions newest first with one current version", () => {
     expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1)
-    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
+    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.1", "3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
   })
 
   it("records the verified v3.3 image learning scope in both languages", () => {
@@ -73,6 +73,18 @@ describe("changelog", () => {
     expect(zh("3.3.0").changes.map((change) => change.text).join(" ")).not.toMatch(/PDF Vision|HEIC Vision|整本教材/)
     expect(ja("3.3.0").changes.map((change) => change.text).join(" ")).toContain("画像から単語")
     expect(ja("3.3.0").changes.map((change) => change.text).join(" ")).toContain("再読み込み後も復元")
+  })
+
+  it("records the v3.3.1 accuracy hotfix without rewriting v3.3.0", () => {
+    const zhChanges = zh("3.3.1").changes.map((change) => change.text).join(" ")
+    const jaChanges = ja("3.3.1").changes.map((change) => change.text).join(" ")
+    expect(zhChanges).toContain("3–6 个高清分区")
+    expect(zhChanges).toContain("保持未识别")
+    expect(zhChanges).toContain("Review 刷新后可恢复")
+    expect(zhChanges).toContain("批量选择与批量删除")
+    expect(jaChanges).toContain("高精細な領域")
+    expect(jaChanges).toContain("一括選択と一括削除")
+    expect(zh("3.3.0").title).toBe("图片学习")
   })
 
   it("marks v3 as a major update", () => {
