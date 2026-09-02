@@ -3,7 +3,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js"
 import { appendUniqueMessage, parseChatMessage, validateMessageContent } from "@/lib/chat"
 import { getAuthErrorMessage, isAppRole } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
-import { buildAttachmentMessageRow, cleanupDeletedChatAttachment, logAttachmentInsertDiagnostics, logAttachmentInsertError, sendAttachmentWithCleanup } from "@/lib/chatMediaService"
+import { buildAttachmentMessageRow, cleanupDeletedChatAttachment, sendAttachmentWithCleanup } from "@/lib/chatMediaService"
 import type { ChatAttachment, ChatMessage, ChatMessageType, ChatRoomType } from "@/types/chat"
 
 const roomMessageSelect = "id, room_type, sender_id, content, message_type, attachment_path, attachment_name, attachment_mime, attachment_size, attachment_duration, attachment_width, attachment_height, created_at, sender:profiles!chat_messages_sender_id_fkey(username, role)"
@@ -40,9 +40,8 @@ export async function sendRoomAttachment(roomType: ChatRoomType, file: File, met
   return sendAttachmentWithCleanup(file, { kind: "group", roomType }, async (attachment: ChatAttachment, messageType: Exclude<ChatMessageType, "text">) => {
     const client = requireSupabase(); const { data: authData } = await client.auth.getUser(); if (!authData.user) throw new Error("登录状态已失效，请重新登录。")
     const row = { room_type: roomType, sender_id: authData.user.id, ...buildAttachmentMessageRow(attachment, messageType) }
-    logAttachmentInsertDiagnostics("chat_messages", row)
     const { data, error } = await client.from("chat_messages").insert(row).select(roomMessageSelect).single()
-    if (error) { logAttachmentInsertError("chat_messages", error); throw new Error(getAuthErrorMessage(error.message)) } const message = parseChatMessage(data); if (!message) throw new Error("消息格式异常。"); return message
+    if (error) throw new Error(getAuthErrorMessage(error.message)); const message = parseChatMessage(data); if (!message) throw new Error("消息格式异常。"); return message
   }, metadata)
 }
 

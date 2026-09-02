@@ -31,9 +31,10 @@ describe("DeepSeek Edge Function security contract", () => {
     for (const header of ["authorization", "x-client-info", "apikey", "content-type"]) expect(edgeSource).toContain(header)
   })
 
-  it("loads private records server-side and does not send attachments to the text model", () => {
+  it("loads private images server-side without exposing public or signed URLs", () => {
     expect(edgeSource).toContain('admin.from("learning_assets")')
-    expect(edgeSource).not.toContain("admin.storage")
+    expect(edgeSource).toContain("admin.storage")
+    expect(edgeSource).toContain("requestDeepSeekVisionAnalysis")
     expect(edgeSource).toContain('status: "unsupported"')
     expect(edgeSource).not.toContain("createPublicUrl")
     expect(edgeSource).not.toContain("createSignedUrl")

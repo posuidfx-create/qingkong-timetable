@@ -1792,6 +1792,7 @@ body {
 .course-commons__feed span,.course-commons__feed small { color:var(--muted-foreground); font-size:.67rem; }
 .course-commons__feed h3 { margin-top:.35rem; overflow:hidden; font-size:1rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
 .course-commons__feed p { display:-webkit-box; overflow:hidden; margin:.35rem 0; font-size:.78rem; line-height:1.65; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.course-commons__feed .contribution-image-grid { grid-column:2; margin-top:0; margin-bottom:1rem; }
 .course-commons__empty { min-height:14rem; display:grid; place-content:center; justify-items:center; gap:1rem; color:var(--muted-foreground); text-align:center; }
 .course-commons__analysis { margin:1rem 0; padding:1rem; border:1px solid var(--border); }
 .course-commons__analysis>div { display:flex; align-items:center; gap:.5rem; }.course-commons__analysis>div button { margin-left:auto; min-width:2.75rem; min-height:2.75rem; display:grid; place-content:center; }
@@ -1860,6 +1861,7 @@ body {
 .lesson-detail-header h1 { margin-top:.35rem; font-size:clamp(2.7rem,7vw,5.5rem); font-weight:580; line-height:.95; letter-spacing:-.05em; }
 .lesson-detail-header>div>span { display:block; margin-top:.6rem; color:var(--muted-foreground); font-size:.75rem; }
 .lesson-detail-header dl { grid-column:1/-1; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:1rem; }
+.lesson-detail-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.5rem; }
 .lesson-detail-tabs { margin-bottom:1rem; }
 .japanese-lesson-detail .vocabulary-workspace { min-height:0; }
 .japanese-lesson-detail .vocabulary-workspace-header { display:flex; justify-content:flex-end; padding:.25rem 0 .75rem; border-bottom:0; }
@@ -1909,6 +1911,8 @@ body {
   .lesson-detail-header>div { min-width:0; flex:1; }
   .lesson-detail-header h1 { font-size:clamp(2.6rem,14vw,4rem); }
   .lesson-picker-trigger { min-height:2.75rem; }
+  .lesson-detail-actions { width:100%; justify-content:flex-start; }
+  .lesson-detail-actions>button { min-height:2.75rem; flex:1 1 9rem; }
   .lesson-detail-header dl { width:100%; }
   .lesson-detail-tabs button { flex:1; min-width:0; padding-inline:.45rem; }
   .grammar-row { grid-template-columns:2.25rem minmax(0,1fr) 2rem 2.75rem; }

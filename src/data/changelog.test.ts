@@ -64,7 +64,15 @@ describe("changelog", () => {
 
   it("keeps versions newest first with one current version", () => {
     expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1)
-    expect(changelog.map((entry) => entry.version)).toEqual(["3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
+    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
+  })
+
+  it("records the verified v3.3 image learning scope in both languages", () => {
+    expect(zh("3.3.0").changes.map((change) => change.text).join(" ")).toContain("从图片识别单词")
+    expect(zh("3.3.0").changes.map((change) => change.text).join(" ")).toContain("刷新后恢复")
+    expect(zh("3.3.0").changes.map((change) => change.text).join(" ")).not.toMatch(/PDF Vision|HEIC Vision|整本教材/)
+    expect(ja("3.3.0").changes.map((change) => change.text).join(" ")).toContain("画像から単語")
+    expect(ja("3.3.0").changes.map((change) => change.text).join(" ")).toContain("再読み込み後も復元")
   })
 
   it("marks v3 as a major update", () => {

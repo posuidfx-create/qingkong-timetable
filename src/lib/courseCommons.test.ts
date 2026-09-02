@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/supabase", () => ({ supabase: null }))
 
-import { filterCourseContributions, getCourseCommonsMetrics, getDefaultCourseSharing, parseCourseCommonsAnalysis, parseCourseContribution, resolveSharedAssetIds } from "@/lib/courseCommons"
+import { filterCourseContributions, getCourseCommonsMetrics, getDefaultCourseSharing, isContributionPreviewImage, parseCourseCommonsAnalysis, parseCourseContribution, resolveSharedAssetIds } from "@/lib/courseCommons"
 import type { CourseContribution } from "@/types/courseCommons"
 
 const row = { id: "c1", author_id: "safe-author-id", author_name: "学习者", course_key: "course-1", course_name_snapshot: "大学日语", source_record_id: null, title: "助词整理", content: "は与が的区别", contribution_type: "knowledge", language: "zh-CN", status: "published", ai_summary: "助词摘要", ai_key_points: ["は", "が"], ai_suggested_review: null, published_at: "2026-09-01T00:00:00Z", updated_at: "2026-09-01T00:00:00Z", bookmark_count: "2", bookmarked: false }
@@ -14,4 +14,5 @@ describe("Course Commons domain", () => {
   it("defaults only new classified records to shared", () => { expect(getDefaultCourseSharing("course-1")).toBe(true); expect(getDefaultCourseSharing("")).toBe(false); expect(getDefaultCourseSharing("course-1", true)).toBe(false) })
   it("keeps attachments private unless explicitly selected", () => { const file = new File(["abc"], "note.txt", { type: "text/plain" }); expect(resolveSharedAssetIds([], [{ id: "a1", originalName: "note.txt", fileSize: file.size }], [])).toEqual([]); expect(resolveSharedAssetIds([], [{ id: "a1", originalName: "note.txt", fileSize: file.size }], [file])).toEqual(["a1"]) })
   it("runtime-validates public AI output", () => { expect(parseCourseCommonsAnalysis({ version: 1, courseSummary: "摘要", keyTopics: [], recurringDifficulties: [], recommendedReview: [], recentUpdates: [], sourceContributionIds: ["c1"] })?.courseSummary).toBe("摘要"); expect(parseCourseCommonsAnalysis({ version: 1, courseSummary: "摘要" })).toBeNull() })
+  it("previews only browser-safe shared image MIME types", () => { const base = { id: "a", contributionId: "c1", fileName: "x", fileSize: 1, storageBucket: "course-contributions", storagePath: "course/c1/u/x", createdAt: "" }; expect(isContributionPreviewImage({ ...base, mimeType: "image/jpeg" })).toBe(true); expect(isContributionPreviewImage({ ...base, mimeType: "image/webp" })).toBe(true); expect(isContributionPreviewImage({ ...base, mimeType: "image/heic" })).toBe(false) })
 })

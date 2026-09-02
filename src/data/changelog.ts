@@ -6,7 +6,11 @@ const changes = (items: string[], type: ChangelogChangeType = "improved") => ite
 const groupChanges = (group: string, items: string[], type: ChangelogChangeType = "improved") => items.map((text) => ({ type, text, group }))
 
 export const changelog: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "课程共享知识库", description: "在私人学习空间之外，为每门课程建立由学习者共同积累的公开知识层。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "图片学习", description: "让课程分享、聊天图片与个人学习资料真正可看、可整理，也能从教材照片提取本课单词。", isCurrent: true, changes: [
+    ...changes(["分享内容与聊天现可直接预览图片", "Learning 支持 DeepSeek 图片理解，可从课堂照片和截图整理学习笔记", "大家的日语课次支持从图片识别单词", "识别结果可确认、编辑并一键加入当前课"], "new"),
+    ...changes(["优化图片权限、预览失败重试与移动端查看体验", "图片识词会跳过已有单词，并保留失败项供用户重试", "图片识词 Review 可在刷新后恢复，并保留编辑与选择状态"], "improved"),
+  ] },
+  { version: "3.2.0", title: "课程共享知识库", description: "在私人学习空间之外，为每门课程建立由学习者共同积累的公开知识层。", changes: [
     ...changes(["新增课程公共知识库，支持按稳定课程身份浏览共享内容", "支持主动分享自己的课程笔记与知识整理，并独立保存公开快照", "支持共享经用户逐项选择并确认有权分享的课程资料", "支持收藏与引用其他人的公开学习内容到私人学习记录", "新增公共课程搜索与 DeepSeek 公共课程知识整理"], "new"),
     ...changes(["私人学习记录与原始附件继续保持独立和私密", "新增基础举报、内容隐藏与取消共享机制"], "security"),
   ] },
@@ -50,7 +54,11 @@ export const changelog: readonly ChangelogEntry[] = [
 ]
 
 export const changelogJa: readonly ChangelogEntry[] = [
-  { version: APP_VERSION, title: "授業共有ナレッジ", description: "個人の学習空間とは分離した、学習者が授業ごとの知識を積み重ねる共有レイヤーを追加しました。", isCurrent: true, changes: [
+  { version: APP_VERSION, title: "画像で学ぶ", description: "授業共有やチャットの画像をその場で確認し、学習画像の整理や教材写真からの単語取り込みに対応しました。", isCurrent: true, changes: [
+    ...changes(["共有内容とチャットの画像を直接プレビューできるようになりました", "LearningでDeepSeekの画像理解に対応し、授業写真やスクリーンショットから学習ノートを整理できます", "『みんなの日本語』の各課で画像から単語を読み取れるようになりました", "読み取り結果を確認・編集して、現在の課へまとめて追加できます"], "new"),
+    ...changes(["画像権限、プレビューの再読み込み、モバイル表示を改善しました", "画像からの単語追加では登録済みの語を除外し、失敗した項目を再試行できます", "画像単語のReviewは再読み込み後も復元され、編集内容と選択状態を保持します"], "improved"),
+  ] },
+  { version: "3.2.0", title: "授業共有ナレッジ", description: "個人の学習空間とは分離した、学習者が授業ごとの知識を積み重ねる共有レイヤーを追加しました。", changes: [
     ...changes(["安定した授業IDごとに共有内容を閲覧できる授業共有ナレッジを追加", "自分の授業ノートや知識整理を、独立した公開スナップショットとして共有可能", "権利を確認し、個別に選択した授業資料のみ共有可能", "公開された学習内容の保存と、自分の非公開学習記録への引用に対応", "授業内検索と DeepSeek による公開授業ナレッジ整理を追加"], "new"),
     ...changes(["個人の学習記録と元の添付資料は引き続き独立して非公開", "基本的な報告、非表示、共有取消の仕組みを追加"], "security"),
   ] },

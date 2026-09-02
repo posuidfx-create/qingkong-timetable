@@ -1,4 +1,4 @@
-import { createAttachmentDraft, createChatAttachmentPath, getChatRecordingDuration, logAttachmentFileDiagnostics } from "@/lib/chatMedia"
+import { createAttachmentDraft, createChatAttachmentPath, getChatRecordingDuration } from "@/lib/chatMedia"
 import { supabase } from "@/lib/supabase"
 import type { ChatAttachment, ChatMessageType, ChatRoomType, PrivateMessage } from "@/types/chat"
 import type { ChatMessage } from "@/types/chat"
@@ -33,27 +33,14 @@ function assertAttachmentRow(row: AttachmentMessageRow): void {
 }
 
 export function buildAttachmentMessageRow(attachment: ChatAttachment, messageType: Exclude<ChatMessageType, "text">): AttachmentMessageRow {
-  if (import.meta.env.DEV) console.info("[chat attachment] row input", { attachmentSize: attachment.size, attachmentSizeType: typeof attachment.size, isFinite: Number.isFinite(attachment.size) })
   const row: AttachmentMessageRow = { content: "", message_type: messageType, attachment_path: attachment.path, attachment_name: attachment.name, attachment_mime: attachment.mime, attachment_size: attachment.size, attachment_duration: attachment.duration ?? null, attachment_width: attachment.width ?? null, attachment_height: attachment.height ?? null }
   assertAttachmentRow(row)
   return row
 }
 
-export function logAttachmentInsertDiagnostics(table: "chat_messages" | "private_messages", row: AttachmentMessageRow): void {
-  if (!import.meta.env.DEV) return
-  console.info(`[${table}] attachment insert payload`, { message_type: row.message_type, content: row.content, contentLength: row.content.length, attachment_path: row.attachment_path, hasAttachmentPath: Boolean(row.attachment_path), attachment_name: row.attachment_name, attachment_mime: row.attachment_mime, attachment_size: row.attachment_size, attachment_duration: row.attachment_duration, attachment_width: row.attachment_width, attachment_height: row.attachment_height })
-}
-
-export function logAttachmentInsertError(table: "chat_messages" | "private_messages", error: unknown): void {
-  if (!import.meta.env.DEV || !error || typeof error !== "object") return
-  const postgres = error as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown }
-  console.error(`[${table}] attachment insert error`, { code: postgres.code, message: postgres.message, details: postgres.details, hint: postgres.hint })
-}
-
 export async function uploadChatAttachment(scope: UploadScope, file: File, metadata: MediaMetadata = {}): Promise<ChatAttachment> {
   const client = requireSupabase()
   const draft = createAttachmentDraft(file)
-  logAttachmentFileDiagnostics("upload", file, { kind: draft.kind, name: draft.name, mime: draft.mime, size: draft.size })
   const { data: authData } = await client.auth.getUser()
   if (!authData.user) throw new Error("登录状态已失效，请重新登录。")
   const path = createChatAttachmentPath(scope, authData.user.id, file, crypto.randomUUID())
@@ -71,9 +58,9 @@ export async function cleanupDeletedChatAttachment(path: string | null, cleanup:
   if (path) await cleanup(path)
 }
 
-export async function getChatAttachmentUrl(path: string): Promise<string> {
+export async function getChatAttachmentUrl(path: string, forceRefresh = false): Promise<string> {
   const cached = signedUrlCache.get(path)
-  if (cached && cached.expiresAt > Date.now()) return cached.url
+  if (!forceRefresh && cached && cached.expiresAt > Date.now()) return cached.url
   const { data, error } = await requireSupabase().storage.from(CHAT_MEDIA_BUCKET).createSignedUrl(path, 60 * 60)
   if (error || !data?.signedUrl) throw new Error("附件链接生成失败，请稍后重试。")
   signedUrlCache.set(path, { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 })

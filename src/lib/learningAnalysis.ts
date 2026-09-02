@@ -52,8 +52,8 @@ export function markLearningAssetsProcessing(record: LearningRecord): LearningRe
   return { ...record, processingStatus: hasRecordText(record) ? "processing" : record.processingStatus, assets: record.assets.map((asset) => isLearningAssetAiSupported(asset) ? { ...asset, processingStatus: "processing" as const } : asset) }
 }
 
-export function buildLearningAnalysisRequest(recordId: string): { recordId: string } {
-  return { recordId }
+export function buildLearningAnalysisRequest(recordId: string, assetId?: string): { recordId: string; assetId?: string } {
+  return assetId ? { recordId, assetId } : { recordId }
 }
 
 export function mapLearningAnalysisError(status: number | null, serverCode?: string | null): LearningAnalysisErrorCode {
@@ -94,10 +94,10 @@ function parseRunResponse(value: unknown): Omit<LearningAnalysisRunResult, "reco
   return { results, completed: row.completed, failed: row.failed, unsupported: row.unsupported }
 }
 
-export async function analyzeLearningRecord(recordId: string): Promise<LearningAnalysisRunResult> {
+export async function analyzeLearningRecord(recordId: string, assetId?: string): Promise<LearningAnalysisRunResult> {
   if (!LEARNING_AI_ENABLED) throw new LearningAnalysisError("not_configured")
   if (!supabase) throw new LearningAnalysisError("not_configured")
-  const { data, error } = await supabase.functions.invoke(LEARNING_ANALYSIS_FUNCTION_NAME, { body: buildLearningAnalysisRequest(recordId) })
+  const { data, error } = await supabase.functions.invoke(LEARNING_ANALYSIS_FUNCTION_NAME, { body: buildLearningAnalysisRequest(recordId, assetId) })
   if (error) {
     const detail = await readFunctionError(error)
     throw new LearningAnalysisError(mapLearningAnalysisError(detail.status, detail.code), error)

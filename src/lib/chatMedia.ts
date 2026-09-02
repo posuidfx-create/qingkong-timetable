@@ -56,13 +56,6 @@ export function createAttachmentDraft(file: File, preferredKind = preferredKindB
   return { file, kind: metadata.messageType, name: metadata.attachmentName, mime: metadata.attachmentMime, size: file.size }
 }
 
-export function logAttachmentFileDiagnostics(stage: "selected" | "draft" | "upload", file: Pick<File, "name" | "size" | "type">, draft?: Omit<ChatAttachmentDraft, "file">): void {
-  if (!import.meta.env.DEV) return
-  if (stage === "selected") console.info("[chat attachment] selected", { fileName: file.name, fileSize: file.size, fileSizeType: typeof file.size, fileType: file.type })
-  else if (stage === "draft" && draft) console.info("[chat attachment] draft", { draftName: draft.name, draftSize: draft.size, draftSizeType: typeof draft.size, draftMime: draft.mime, draftKind: draft.kind })
-  else console.info("[chat attachment] upload metadata", { metadataName: draft?.name, metadataSize: draft?.size, metadataSizeType: typeof draft?.size, metadataMime: draft?.mime, metadataKind: draft?.kind })
-}
-
 export function validateChatAttachment(file: Pick<File, "type" | "name" | "size">): { type: Exclude<ChatMessageType, "text">; error: null } | { type: null; error: string } {
   const metadata = buildAttachmentMetadata(file)
   if (!metadata) return { type: null, error: "无法识别该文件类型，请选择其他文件。" }

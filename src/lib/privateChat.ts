@@ -4,7 +4,7 @@ import { appendUniqueMessage, isPrivateParticipant, parseChatAttachment, sortPri
 import { isChatMessageType } from "@/lib/chatMedia"
 import { getAuthErrorMessage, isAppRole } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
-import { buildAttachmentMessageRow, logAttachmentInsertDiagnostics, logAttachmentInsertError, sendAttachmentWithCleanup } from "@/lib/chatMediaService"
+import { buildAttachmentMessageRow, sendAttachmentWithCleanup } from "@/lib/chatMediaService"
 import type { AppRole } from "@/types/auth"
 import type { PrivateConversation, PrivateMessage } from "@/types/chat"
 import type { ChatAttachment, ChatMessageType } from "@/types/chat"
@@ -46,9 +46,8 @@ export async function sendPrivateAttachment(receiverId: string, file: File, meta
   return sendAttachmentWithCleanup(file, { kind: "private", otherUserId: receiverId }, async (attachment: ChatAttachment, messageType: Exclude<ChatMessageType, "text">) => {
     const client = requireSupabase(); const { data: authData } = await client.auth.getUser(); if (!authData.user) throw new Error("登录状态已失效，请重新登录。")
     const row = { sender_id: authData.user.id, receiver_id: receiverId, ...buildAttachmentMessageRow(attachment, messageType) }
-    logAttachmentInsertDiagnostics("private_messages", row)
     const { data, error } = await client.from("private_messages").insert(row).select(privateMessageSelect).single()
-    if (error) { logAttachmentInsertError("private_messages", error); throw new Error(getAuthErrorMessage(error.message)) } const message = parsePrivateMessage(data); if (!message) throw new Error("消息格式异常。"); return message
+    if (error) throw new Error(getAuthErrorMessage(error.message)); const message = parsePrivateMessage(data); if (!message) throw new Error("消息格式异常。"); return message
   }, metadata)
 }
 

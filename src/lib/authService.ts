@@ -2,6 +2,7 @@ import { getAuthErrorMessage } from "@/lib/auth"
 import { setAuthPersistence } from "@/lib/authPersistence"
 import { normalizeProfileIdentity } from "@/lib/profileIdentity"
 import { supabase } from "@/lib/supabase"
+import { clearAllVocabularyImageReviewDrafts } from "@/lib/vocabularyImageReviewDraft"
 import type { ProfileCohortYear, ProfileIdentityType } from "@/types/auth"
 
 export interface AuthActionResult {
@@ -39,5 +40,7 @@ export async function signUpWithPassword(
 
 export async function signOut(): Promise<AuthActionResult> {
   const { error } = await requireSupabase().auth.signOut()
-  return error ? { error: getAuthErrorMessage(error.message) } : {}
+  if (error) return { error: getAuthErrorMessage(error.message) }
+  clearAllVocabularyImageReviewDrafts()
+  return {}
 }

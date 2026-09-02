@@ -68,6 +68,22 @@ export interface VocabularyWordDraft {
   mastery: VocabularyMastery
 }
 
+export interface ExtractedVocabularyWord {
+  term: string
+  reading: string
+  partOfSpeech: string
+  meanings: string[]
+  sourceText: string
+  confidence: number
+  warnings: string[]
+}
+
+export interface VocabularyImageExtraction {
+  version: 1
+  words: ExtractedVocabularyWord[]
+  warnings: string[]
+}
+
 export interface GrammarExample {
   sentence: string
   translation: string
