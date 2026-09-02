@@ -14,7 +14,7 @@ export function LanguageMenu({ compact = false }: { compact?: boolean }) {
   ]
 
   return <div className="language-menu relative">
-    <button aria-expanded={open} aria-label={t("utility.language")} className={cn("workspace-utility-button", !compact && "min-w-10")} onClick={() => setOpen((current) => !current)} type="button">
+    <button aria-expanded={open} aria-label={t("utility.switchLanguage")} className={cn("workspace-utility-button", !compact && "min-w-10")} onClick={() => setOpen((current) => !current)} title={t("utility.switchLanguage")} type="button">
       <Languages aria-hidden="true" className="size-[18px]" />
       <span className={compact ? "sr-only" : "hidden xl:inline"}>{t(locale === "zh-CN" ? "language.currentZh" : "language.currentJa")}</span>
     </button>

@@ -64,7 +64,7 @@ describe("changelog", () => {
 
   it("keeps versions newest first with one current version", () => {
     expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1)
-    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.1", "3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
+    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.2", "3.3.1", "3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
   })
 
   it("records the verified v3.3 image learning scope in both languages", () => {
@@ -84,6 +84,13 @@ describe("changelog", () => {
     expect(zhChanges).toContain("批量选择与批量删除")
     expect(jaChanges).toContain("高精細な領域")
     expect(jaChanges).toContain("一括選択と一括削除")
+    expect(zh("3.3.0").title).toBe("图片学习")
+  })
+
+  it("records the v3.3.2 header icon hotfix without rewriting earlier releases", () => {
+    expect(zh("3.3.2").changes.map((change) => change.text).join(" ")).toContain("单词本与语言切换现在可以清晰区分")
+    expect(ja("3.3.2").changes.map((change) => change.text).join(" ")).toContain("単語帳と言語切り替えを見分けやすく")
+    expect(zh("3.3.1").title).toBe("图片识词准确率优化")
     expect(zh("3.3.0").title).toBe("图片学习")
   })
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Info, Languages } from "lucide-react"
+import { BookOpenText, Info } from "lucide-react"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { LanguageMenu } from "@/components/layout/LanguageMenu"
@@ -66,7 +66,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
         <div className="hidden min-w-0 flex-1 items-center justify-center md:flex"><p className="truncate text-xs font-medium tracking-[0.08em] text-muted-foreground">{pageTitle[activePage]}</p></div>
         <div className="app-shell-utility ml-auto">
           {profile ? <div className="workspace-user hidden items-center gap-2 lg:flex"><div className="min-w-0 text-right"><p className="truncate text-xs font-medium">{profile.username}</p><CohortBadge year={profile.cohortYear} className="mt-0.5 inline-flex" /></div><UserAvatar id={profile.id} name={profile.username} className="size-8 rounded-full text-xs" /></div> : null}
-          {activePage === "learning" ? <button aria-label={t("learning.words")} className="workspace-utility-button" onClick={openVocabulary} type="button"><Languages aria-hidden="true" className="size-[18px]" /></button> : null}
+          {activePage === "learning" ? <button aria-label={t("utility.openVocabulary")} className="workspace-utility-button" onClick={openVocabulary} title={t("utility.vocabulary")} type="button"><BookOpenText aria-hidden="true" className="size-[18px]" /></button> : null}
           <LanguageMenu compact />
           <button aria-label={t("utility.about")} className="workspace-utility-button" onClick={() => onPageChange("about")} type="button"><Info aria-hidden="true" className="size-[18px]" /></button>
           <PixelMotionMenu />
