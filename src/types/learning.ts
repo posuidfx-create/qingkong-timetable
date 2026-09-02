@@ -46,6 +46,10 @@ export interface LearningRecord {
   moodNote: string | null
   processingStatus: LearningProcessingStatus
   analysis: LearningAssetAnalysis | null
+  sourceContributionId?: string | null
+  sourceAuthorNameSnapshot?: string | null
+  sourceTitleSnapshot?: string | null
+  quotedAt?: string | null
   createdAt: string
   updatedAt: string
   assets: LearningAsset[]

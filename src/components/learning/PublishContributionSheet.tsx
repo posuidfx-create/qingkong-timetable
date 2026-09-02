@@ -1,0 +1,28 @@
+import { useMemo, useState, type FormEvent } from "react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Textarea } from "@/components/ui/textarea"
+import { useI18n } from "@/i18n/useI18n"
+import { publishLearningRecord } from "@/lib/courseCommons"
+import type { ContributionType, CourseContribution } from "@/types/courseCommons"
+import type { LearningRecord } from "@/types/learning"
+
+export function PublishContributionSheet({ courseKey, onOpenChange, onPublished, open, records }: { courseKey: string; onOpenChange: (open: boolean) => void; onPublished: (item: CourseContribution) => void; open: boolean; records: readonly LearningRecord[] }) {
+  const { locale, t } = useI18n(); const eligible = useMemo(() => records.filter((record) => record.courseKey === courseKey), [courseKey, records])
+  const first = eligible[0]; const [recordId, setRecordId] = useState(first?.id ?? ""); const selected = eligible.find((record) => record.id === recordId) ?? first ?? null
+  const [title, setTitle] = useState(first?.title?.trim() || first?.content?.trim().slice(0, 80) || ""); const [content, setContent] = useState(first?.content ?? ""); const [type, setType] = useState<ContributionType>("note"); const [assetIds, setAssetIds] = useState<string[]>([]); const [confirmed, setConfirmed] = useState(false); const [saving, setSaving] = useState(false); const [error, setError] = useState<string | null>(null)
+  const selectRecord = (id: string) => { const record = eligible.find((item) => item.id === id); setRecordId(id); setTitle(record?.title?.trim() || record?.content?.trim().slice(0, 80) || t("learning.untitledRecord")); setContent(record?.content ?? ""); setAssetIds([]); setConfirmed(false) }
+  const submit = async (event: FormEvent) => { event.preventDefault(); if (!selected) return; if (assetIds.length && !confirmed) { setError(t("courseCommons.rightsRequired")); return } setSaving(true); setError(null); try { const item = await publishLearningRecord({ sourceRecordId: selected.id, title, content, type, language: locale, sharedAssetIds: assetIds, confirmAssetRights: confirmed }); onPublished(item); onOpenChange(false) } catch { setError(t("courseCommons.publishFailed")) } finally { setSaving(false) } }
+  return <Sheet onOpenChange={onOpenChange} open={open}><SheetContent className="responsive-bottom-sheet max-h-[94dvh] rounded-t-[28px]" side="bottom"><SheetHeader><SheetTitle>{t("courseCommons.publishTitle")}</SheetTitle><SheetDescription>{t("courseCommons.publishDescription")}</SheetDescription></SheetHeader><form className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]" onSubmit={submit}>
+    <div><Label>{t("courseCommons.sourceRecord")}</Label><Select onValueChange={selectRecord} value={selected?.id ?? ""}><SelectTrigger className="mt-2 min-h-11"><SelectValue placeholder={t("courseCommons.selectRecord")} /></SelectTrigger><SelectContent>{eligible.map((record) => <SelectItem key={record.id} value={record.id}>{record.title?.trim() || record.recordDate}</SelectItem>)}</SelectContent></Select></div>
+    <div><Label htmlFor="contribution-title">{t("courseCommons.title")}</Label><Input className="mt-2 min-h-11" id="contribution-title" maxLength={160} onChange={(event) => setTitle(event.target.value)} required value={title} /></div>
+    <div><Label htmlFor="contribution-content">{t("courseCommons.content")}</Label><Textarea className="mt-2 min-h-36" id="contribution-content" maxLength={30000} onChange={(event) => setContent(event.target.value)} value={content} /></div>
+    <div><Label>{t("courseCommons.type")}</Label><Select onValueChange={(value) => setType(value as ContributionType)} value={type}><SelectTrigger className="mt-2 min-h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="note">{t("courseCommons.typeNote")}</SelectItem><SelectItem value="knowledge">{t("courseCommons.typeKnowledge")}</SelectItem><SelectItem value="resource">{t("courseCommons.typeResource")}</SelectItem></SelectContent></Select></div>
+    {selected?.assets.length ? <fieldset><legend className="text-sm font-medium">{t("courseCommons.sharedAssets")}</legend><p className="mt-1 text-xs leading-5 text-muted-foreground">{t("courseCommons.assetsPrivateByDefault")}</p><div className="mt-2 divide-y divide-border/60 border-y border-border/60">{selected.assets.map((asset) => <label className="flex min-h-12 items-center gap-3 py-2 text-sm" key={asset.id}><input checked={assetIds.includes(asset.id)} className="size-4" onChange={() => setAssetIds((ids) => ids.includes(asset.id) ? ids.filter((id) => id !== asset.id) : [...ids, asset.id])} type="checkbox" /><span className="min-w-0 flex-1 truncate">{asset.originalName}</span></label>)}</div>{assetIds.length ? <label className="mt-3 flex min-h-11 items-start gap-3 text-sm"><input checked={confirmed} className="mt-1 size-4" onChange={(event) => setConfirmed(event.target.checked)} type="checkbox" /><span>{t("courseCommons.rightsConfirmation")}</span></label> : null}</fieldset> : null}
+    {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}<Button className="min-h-12 w-full" disabled={saving || !selected} type="submit">{saving ? t("common.saving") : t("courseCommons.publish")}</Button>
+  </form></SheetContent></Sheet>
+}
