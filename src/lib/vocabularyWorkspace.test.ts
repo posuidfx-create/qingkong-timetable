@@ -13,6 +13,16 @@ describe("Vocabulary Workspace interaction contract", () => {
     expect(workspace).toContain("vocabulary-speaker")
     expect(workspace).toContain("setDetail(word)")
     expect(workspace).toContain("play(word)")
+    expect(workspace).toContain('t("vocabulary.playTerm", { term: word.term })')
+    expect(detail).toContain('t(props.active ? "vocabulary.stopTerm" : "vocabulary.playTerm", { term: word.term })')
+    expect(workspace).not.toMatch(/textContent|innerText|formattedText|displayText/)
+  })
+
+  it("routes list, lesson, search and detail playback through the same term-only manager", () => {
+    expect(workspace.match(/onClick=\{\(\) => play\(word\)\}/g)).toHaveLength(2)
+    expect(workspace).toContain('term: query.trim()')
+    expect(workspace).toContain('onPlay={() => { if (detail) play(detail) }}')
+    expect(lessonWorkspace).toContain("<VocabularyWorkspace")
   })
 
   it("supports search, duplicate prevention and explicit AI analysis", () => {

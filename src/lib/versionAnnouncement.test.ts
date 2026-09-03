@@ -10,10 +10,10 @@ function createStorage(initial?: string): Storage {
 }
 
 describe("v3 release announcement", () => {
-  it("uses v3.3.2 as the single release version source", () => {
-    expect(APP_VERSION).toBe("3.3.2")
-    expect(APP_VERSION_TAG).toBe("v3.3.2")
-    expect(MAJOR_UPDATE_TITLE).toBe("v3.3.2 全新升级")
+  it("uses v3.4.0 as the single release version source", () => {
+    expect(APP_VERSION).toBe("3.4.0")
+    expect(APP_VERSION_TAG).toBe("v3.4.0")
+    expect(MAJOR_UPDATE_TITLE).toBe("v3.4.0 全新升级")
   })
 
   it("shows for a first visit or an older version", () => {
@@ -24,8 +24,8 @@ describe("v3 release announcement", () => {
 
   it("persists dismissal and does not show again for v3", () => {
     const storage = createStorage()
-    expect(markMajorUpdateSeen(storage)).toBe("v3.3.2")
-    expect(storage.getItem(SEEN_VERSION_STORAGE_KEY)).toBe("v3.3.2")
+    expect(markMajorUpdateSeen(storage)).toBe("v3.4.0")
+    expect(storage.getItem(SEEN_VERSION_STORAGE_KEY)).toBe("v3.4.0")
     expect(shouldShowMajorUpdate(storage)).toBe(false)
   })
 

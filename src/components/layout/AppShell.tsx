@@ -42,7 +42,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
   return <div className="app-viewport">
     {!debugProbeActive && <><PixelHeartDrift /><PointerPixelField /><TouchPixelResponse /></>}
     <div className="app-shell" data-locale={locale}>
-      <aside className="workspace-rail" aria-label={t("nav.timetable")}>
+      <aside className="workspace-rail" aria-label={t("nav.primary")}>
         <button aria-label={t("brand.name")} className="workspace-rail-brand" onClick={() => onPageChange("timetable")} type="button"><span>{t("brand.name").slice(0, 1)}</span></button>
         <nav className="workspace-rail-nav" aria-label={t("nav.primary")}>
           {primaryNavigationItems.map((item) => {
@@ -52,7 +52,7 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
             return <button key={item.id} type="button" aria-current={isActive ? "page" : undefined} className="workspace-rail-item" data-active={isActive} onClick={() => onPageChange(item.id)}><span className="relative"><Icon aria-hidden="true" className="size-5" strokeWidth={isActive ? 2 : 1.55} /><NavigationBadge count={badgeCount} /></span><span>{t(item.labelKey)}</span></button>
           })}
         </nav>
-        {profile && <button className="workspace-rail-profile" onClick={() => onPageChange("profile")} type="button"><UserAvatar id={profile.id} name={profile.username} className="size-9 rounded-full text-xs" /><span className="sr-only">{profile.username}</span></button>}
+        {profile && <button aria-label={t("nav.profile")} className="workspace-rail-profile" onClick={() => onPageChange("profile")} title={t("nav.profile")} type="button"><UserAvatar id={profile.id} name={profile.username} className="size-9 rounded-full text-xs" /><span className="sr-only">{profile.username}</span></button>}
       </aside>
       <header className="app-page-header sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b px-4 sm:px-5 md:min-h-18 md:px-8">
         <div className="min-w-0 md:hidden">
@@ -66,9 +66,9 @@ export function AppShell({ activePage, children, onPageChange, unreadChatCount =
         <div className="hidden min-w-0 flex-1 items-center justify-center md:flex"><p className="truncate text-xs font-medium tracking-[0.08em] text-muted-foreground">{pageTitle[activePage]}</p></div>
         <div className="app-shell-utility ml-auto">
           {profile ? <div className="workspace-user hidden items-center gap-2 lg:flex"><div className="min-w-0 text-right"><p className="truncate text-xs font-medium">{profile.username}</p><CohortBadge year={profile.cohortYear} className="mt-0.5 inline-flex" /></div><UserAvatar id={profile.id} name={profile.username} className="size-8 rounded-full text-xs" /></div> : null}
-          {activePage === "learning" ? <button aria-label={t("utility.openVocabulary")} className="workspace-utility-button" onClick={openVocabulary} title={t("utility.vocabulary")} type="button"><BookOpenText aria-hidden="true" className="size-[18px]" /></button> : null}
+          {activePage === "learning" || activePage === "vocabulary" ? <button aria-current={activePage === "vocabulary" ? "page" : undefined} aria-label={t("utility.openVocabulary")} className="workspace-utility-button" data-active={activePage === "vocabulary"} onClick={openVocabulary} title={t("utility.vocabulary")} type="button"><BookOpenText aria-hidden="true" className="size-[18px]" /></button> : null}
           <LanguageMenu compact />
-          <button aria-label={t("utility.about")} className="workspace-utility-button" onClick={() => onPageChange("about")} type="button"><Info aria-hidden="true" className="size-[18px]" /></button>
+          <button aria-current={activePage === "about" ? "page" : undefined} aria-label={t("utility.about")} className="workspace-utility-button" data-active={activePage === "about"} onClick={() => onPageChange("about")} title={t("utility.about")} type="button"><Info aria-hidden="true" className="size-[18px]" /></button>
           <PixelMotionMenu />
           <ThemeToggle />
         </div>

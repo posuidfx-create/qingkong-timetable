@@ -35,8 +35,8 @@ function browserSpeechAdapter(): SpeechAdapter {
 
 let activeAdapter: SpeechAdapter | null = null
 
-export function getVocabularySpeechText(word: Pick<VocabularyWord, "term" | "reading" | "language">): string {
-  return word.language === "ja-JP" && word.reading?.trim() ? word.reading.trim() : word.term.trim()
+export function getVocabularySpeechText(word: Pick<VocabularyWord, "term">): string {
+  return word.term.trim()
 }
 
 export function getVocabularySpeechLanguage(word: Pick<VocabularyWord, "term" | "language">): VocabularyLanguage {
@@ -44,7 +44,7 @@ export function getVocabularySpeechLanguage(word: Pick<VocabularyWord, "term" | 
 }
 
 export function playVocabularyWord(
-  word: Pick<VocabularyWord, "term" | "reading" | "language">,
+  word: Pick<VocabularyWord, "term" | "language">,
   callbacks: Pick<SpeechRequest, "onStart" | "onEnd" | "onError"> = {},
   adapter: SpeechAdapter = browserSpeechAdapter(),
 ): boolean {

@@ -11,19 +11,23 @@ import { getAuthScreen } from "@/lib/auth"
 import { useAuthStore } from "@/store/authStore"
 import { LoginPage } from "@/pages/LoginPage"
 import { CohortYearSheet } from "@/components/profile/CohortYearSheet"
-import { ProfilePage } from "@/pages/ProfilePage"
 import { RegisterPage } from "@/pages/RegisterPage"
-import { StatisticsPage } from "@/pages/StatisticsPage"
-import { TimetablePage } from "@/pages/TimetablePage"
-import { ChangelogPage } from "@/pages/ChangelogPage"
-import { LearningPage } from "@/pages/LearningPage"
-import { VocabularyPage } from "@/pages/VocabularyPage"
-import { AboutPage } from "@/pages/AboutPage"
 import { LearningModuleNavigation } from "@/components/learning/LearningModuleNavigation"
 import { getPrimaryPageFromPath, primaryPagePaths } from "@/lib/appNavigation"
 import { useI18n } from "@/i18n/useI18n"
 const ChatPage = lazy(() => import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage })))
 const TodoPage = lazy(() => import("@/pages/TodoPage").then((module) => ({ default: module.TodoPage })))
+const TimetablePage = lazy(() => import("@/pages/TimetablePage").then((module) => ({ default: module.TimetablePage })))
+const LearningPage = lazy(() => import("@/pages/LearningPage").then((module) => ({ default: module.LearningPage })))
+const VocabularyPage = lazy(() => import("@/pages/VocabularyPage").then((module) => ({ default: module.VocabularyPage })))
+const ProfilePage = lazy(() => import("@/pages/ProfilePage").then((module) => ({ default: module.ProfilePage })))
+const StatisticsPage = lazy(() => import("@/pages/StatisticsPage").then((module) => ({ default: module.StatisticsPage })))
+const ChangelogPage = lazy(() => import("@/pages/ChangelogPage").then((module) => ({ default: module.ChangelogPage })))
+const AboutPage = lazy(() => import("@/pages/AboutPage").then((module) => ({ default: module.AboutPage })))
+
+function RouteLoading({ label }: { label: string }) {
+  return <section aria-live="polite" className="route-loading" role="status"><span aria-hidden="true" /><p>{label}</p></section>
+}
 
 export default function App() {
   const { t } = useI18n()
@@ -71,9 +75,9 @@ export default function App() {
     ) : activePage === "vocabulary" ? (
       <><LearningModuleNavigation active="vocabulary" onOpenLibrary={() => handlePageChange("learning")} onOpenVocabulary={() => handlePageChange("vocabulary")} /><VocabularyPage onOpenLearning={() => handlePageChange("learning")} /></>
     ) : activePage === "chat" ? (
-      <Suspense fallback={<p className="text-sm text-muted-foreground">{t("auth.openingChat")}</p>}><ChatPage onlineUsers={onlineUsers} onUnreadHandled={handleUnreadHandled} /></Suspense>
+      <ChatPage onlineUsers={onlineUsers} onUnreadHandled={handleUnreadHandled} />
     ) : activePage === "todo" ? (
-      <Suspense fallback={<p className="text-sm text-muted-foreground">{t("auth.openingTodo")}</p>}><TodoPage /></Suspense>
+      <TodoPage />
     ) : activePage === "statistics" ? (
       <StatisticsPage />
     ) : activePage === "changelog" ? (
@@ -85,7 +89,7 @@ export default function App() {
     )
 
   return <><AppShell activePage={activePage} onPageChange={handlePageChange} todoBadgeCount={todoBadgeCount} unreadChatCount={unreadChatCount}>
-    {content}
+    <Suspense fallback={<RouteLoading label={t("common.loading")} />}>{content}</Suspense>
     <CohortYearSheet open={profile?.identityType === null} onOpenChange={() => undefined} required />
   </AppShell><MajorUpdatePrompt onViewUpdates={() => handlePageChange("changelog")} /><PwaUpdatePrompt /></>
 }

@@ -64,7 +64,7 @@ describe("changelog", () => {
 
   it("keeps versions newest first with one current version", () => {
     expect(changelog.filter((entry) => entry.isCurrent)).toHaveLength(1)
-    expect(changelog.map((entry) => entry.version)).toEqual(["3.3.2", "3.3.1", "3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
+    expect(changelog.map((entry) => entry.version)).toEqual(["3.4.0", "3.3.2", "3.3.1", "3.3.0", "3.2.0", "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.3.1", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0", "1.0.0"])
   })
 
   it("records the verified v3.3 image learning scope in both languages", () => {
@@ -92,6 +92,17 @@ describe("changelog", () => {
     expect(ja("3.3.2").changes.map((change) => change.text).join(" ")).toContain("単語帳と言語切り替えを見分けやすく")
     expect(zh("3.3.1").title).toBe("图片识词准确率优化")
     expect(zh("3.3.0").title).toBe("图片学习")
+  })
+
+  it("records the v3.4.0 site polish and performance release in both languages", () => {
+    const zhChanges = zh("3.4.0").changes.map((change) => change.text).join(" ")
+    const jaChanges = ja("3.4.0").changes.map((change) => change.text).join(" ")
+    expect(zhChanges).toContain("按页面拆分代码")
+    expect(zhChanges).toContain("私人学习内容与公开课程知识")
+    expect(jaChanges).toContain("ページ単位のコード分割")
+    expect(jaChanges).toContain("個人の学習内容と公開授業ナレッジ")
+    expect(zhChanges).toContain("播放按钮只朗读单词本身")
+    expect(jaChanges).toContain("単語そのものだけを読む")
   })
 
   it("marks v3 as a major update", () => {

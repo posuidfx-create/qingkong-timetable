@@ -16,6 +16,7 @@ export default defineConfig({
       registerType: "prompt",
       includeAssets: ["icon-192.svg", "icon-512.svg"],
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp}"],
       },
       manifest: {

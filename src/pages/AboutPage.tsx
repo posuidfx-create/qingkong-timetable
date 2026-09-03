@@ -92,7 +92,7 @@ export function AboutPage() {
 
   return <article className="about-workspace mx-auto w-full max-w-7xl pb-8" aria-labelledby="about-page-title">
     <section className="workspace-window about-manifesto-window">
-      <div className="about-heading-column"><Info aria-hidden="true" className="size-5 text-primary" /><p className="about-brand-meta mt-5 text-xs font-semibold tracking-[0.14em] text-muted-foreground">{t("brand.name")} · {APP_VERSION_TAG}</p><h2 className="about-page-title mt-3 max-w-4xl font-medium" id="about-page-title"><span className="about-title-desktop">{copy.title}</span><span className="about-title-mobile">{copy.mobileTitle}{copy.mobileBrandTitle ? <small>{copy.mobileBrandTitle}</small> : null}</span></h2><p className="about-subtitle mt-5 max-w-2xl text-base text-muted-foreground">{copy.subtitle}</p></div>
+      <div className="about-heading-column"><Info aria-hidden="true" className="size-5 text-primary" /><p className="about-brand-meta mt-5 text-xs font-semibold tracking-[0.14em] text-muted-foreground">{t("brand.name")} · {APP_VERSION_TAG}</p><h2 aria-label={copy.title} className="about-page-title mt-3 max-w-4xl font-medium" id="about-page-title"><span aria-hidden="true" className="about-title-desktop">{copy.title}</span><span aria-hidden="true" className="about-title-mobile">{copy.mobileTitle}{copy.mobileBrandTitle ? <small>{copy.mobileBrandTitle}</small> : null}</span></h2><p className="about-subtitle mt-5 max-w-2xl text-base text-muted-foreground">{copy.subtitle}</p></div>
       <div className="about-copy-column">{copy.paragraphs.map((paragraph) => <p className="text-sm text-foreground/88" key={paragraph}>{paragraph}</p>)}</div>
     </section>
 
